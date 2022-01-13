@@ -36,7 +36,7 @@ RUN apt install git --yes --no-install-recommends
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-x86_64.tar.gz -O /opt/cmake-3.22.1-linux-x86_64.tar.gz
 
-RUN apt install patchelf --yes --no-install-recommends
+RUN wget https://github.com/NixOS/patchelf/releases/download/0.14.3/patchelf-0.14.3-x86_64.tar.gz -O /opt/patchelf-0.14.3-x86_64.tar.gz
 
 RUN pip3 install setuptools
 
@@ -46,11 +46,15 @@ RUN pip3 install git+https://github.com/intoli/exodus@ef3d5e92c1b604b09cf0a57baf
 
 RUN exodus /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd /usr/bin/clang-cpp-13 /usr/bin/x86_64-linux-gnu-cpp-11 /usr/bin/gcc-ranlib-11 /usr/bin/g++-11 /usr/bin/gcc-ar-11 /usr/bin/gcc-nm-11 /usr/bin/gcc-11 /usr/bin/llvm-objdump-13 /usr/bin/llvm-objcopy-13 /usr/bin/llvm-ranlib-13 /usr/bin/llvm-ar-13 /usr/bin/llvm-nm-13 /usr/bin/clang-13 /usr/bin/lld-13 /usr/bin/ninja /usr/lib/gcc/x86_64-linux-gnu/11/lto1 /usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper /usr/lib/gcc/x86_64-linux-gnu/11/g++-mapper-server /usr/lib/gcc/x86_64-linux-gnu/11/cc1 /usr/lib/gcc/x86_64-linux-gnu/11/cc1plus /usr/lib/gcc/x86_64-linux-gnu/11/collect2 | bash
 
-COPY generate_toolchain.sh /
+COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
 RUN mkdir /wrappers
 
 COPY gcc g++ clang clang++ /wrappers/
+
+RUN mkdir /tests
+
+COPY a.c /tests/
 
 WORKDIR /data
 

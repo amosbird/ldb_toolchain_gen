@@ -4,18 +4,6 @@
 
 set -e
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <toolchain_prefix>."
-    exit 1
-fi
-
-prefix=$1
-
-if [[ ! $prefix = '/'* ]]; then
-    echo "Prefix should be an absolute PATH."
-    exit 1
-fi
-
 mkdir -p toolchain/{bin,lib}
 
 cp -r -L /opt/exodus/bundles/*/lib/x86_64-linux-gnu/* toolchain/lib/
@@ -24,9 +12,13 @@ cp -r -L /opt/exodus/bundles/*/usr/lib/x86_64-linux-gnu/* toolchain/lib/
 
 cp -L /lib/x86_64-linux-gnu/libresolv.so.2 toolchain/lib/
 
+gcc -shared -fPIC /disable_ld_preload.c -o toolchain/lib/disable_ld_preload.so -ldl
+
+tar xzf /opt/patchelf-0.14.3-x86_64.tar.gz ./bin/patchelf --strip-components=1
+
 for lib in toolchain/lib/*; do
     if [[ ! "$lib" = "toolchain/lib/libc.so.6"* ]]; then
-        patchelf --set-rpath '$ORIGIN' "$lib"
+        ./patchelf --set-rpath '$ORIGIN' "$lib"
     fi
 done
 
@@ -39,7 +31,8 @@ done
 cp /usr/lib/llvm-13/bin/llvm-symbolizer toolchain/bin/
 
 for bin in toolchain/bin/*; do
-    patchelf --set-interpreter "$prefix/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../lib' "$bin"
+    # Set PT_INTERP to a non-existing path so that ldb toolchains with setup won't work at all
+    ./patchelf --set-interpreter "/dev/null" --set-rpath '$ORIGIN/../lib' "$bin"
 done
 
 ln -sf ld.bfd toolchain/bin/ld
@@ -497,7 +490,8 @@ do
     p=$(basename $f)
     g=${p::-2}
     cp -L $f toolchain/lib/gcc/x86_64-linux-gnu/11/$g
-    patchelf --set-interpreter "$prefix/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../../..' toolchain/lib/gcc/x86_64-linux-gnu/11/$g
+    # Set PT_INTERP to a non-existing path so that ldb toolchains with setup won't work at all
+    ./patchelf --set-interpreter "$prefix/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../../..' toolchain/lib/gcc/x86_64-linux-gnu/11/$g
 done
 
 cp -r -L /usr/lib/gcc/x86_64-linux-gnu/11/crtbegin.o \
@@ -528,4 +522,11 @@ mkdir -p toolchain/include/c++
 cp -r /usr/include/x86_64-linux-gnu/c++/11 toolchain/include/x86_64-linux-gnu/c++/
 cp -r /usr/include/c++/11 toolchain/include/c++/
 
+cp ./patchelf toolchain/bin/
+cp -r /tests toolchain/test
+
 tar czf toolchain.tgz toolchain
+
+cat /setup_toolchain.sh toolchain.tgz > ldb_toolchain_gen.sh
+
+chmod +x ldb_toolchain_gen.sh
