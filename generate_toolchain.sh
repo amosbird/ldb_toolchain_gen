@@ -4,6 +4,11 @@
 
 set -e
 
+if [[ -e "toolchain" ]]; then
+    echo "Dir toolchain/ already exists"
+    exit 1
+fi
+
 mkdir -p toolchain/{bin,lib}
 
 cp -r -L /opt/exodus/bundles/*/lib/x86_64-linux-gnu/* toolchain/lib/
@@ -491,30 +496,46 @@ do
     g=${p::-2}
     cp -L $f toolchain/lib/gcc/x86_64-linux-gnu/11/$g
     # Set PT_INTERP to a non-existing path so that ldb toolchains with setup won't work at all
-    ./patchelf --set-interpreter "$prefix/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../../..' toolchain/lib/gcc/x86_64-linux-gnu/11/$g
+    ./patchelf --set-interpreter "/dev/null" --set-rpath '$ORIGIN/../../..' toolchain/lib/gcc/x86_64-linux-gnu/11/$g
 done
 
 cp -r -L /usr/lib/gcc/x86_64-linux-gnu/11/crtbegin.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginT.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o \
-         /usr/lib/gcc/x86_64-linux-gnu/11/libgcc_eh.a \
-         /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/crtend.o \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libgcc_eh.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a \
-         /usr/lib/gcc/x86_64-linux-gnu/11/libgcc_s.so \
+         /lib/x86_64-linux-gnu/libgcc_s.so.1 \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++fs.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libasan.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcov.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libsanitizer.spec \
          /usr/lib/gcc/x86_64-linux-gnu/11/libasan_preinit.o \
-         /usr/lib/gcc/x86_64-linux-gnu/11/libasan.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libasan.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/include \
     toolchain/lib/gcc/x86_64-linux-gnu/11
 
+for so in toolchain/lib/gcc/x86_64-linux-gnu/11/*.so
+do
+    ./patchelf --set-rpath '$ORIGIN/../../..' "$so"
+done
+
+echo "/* GNU ld script
+   Use the shared library, but some functions are only in
+   the static library.  */
+GROUP ( ./libgcc_s.so.1 -lgcc )
+" >toolchain/lib/gcc/x86_64-linux-gnu/11/libgcc_s.so
+
 cp -r -L /usr/lib/clang/13.0.1 toolchain/lib/clang/
+
+for so in toolchain/lib/clang/13.0.1/lib/linux/*.so
+do
+    ./patchelf --set-rpath '$ORIGIN/../../../..' "$so"
+done
 
 mkdir -p toolchain/include/x86_64-linux-gnu/c++
 mkdir -p toolchain/include/c++
