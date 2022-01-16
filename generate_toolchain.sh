@@ -14,7 +14,7 @@ cp -L /lib/x86_64-linux-gnu/libresolv.so.2 toolchain/lib/
 
 gcc -shared -fPIC /disable_ld_preload.c -o toolchain/lib/disable_ld_preload.so -ldl
 
-tar xzf /opt/patchelf-0.14.3-x86_64.tar.gz ./bin/patchelf --strip-components=1
+tar xzf /opt/patchelf-0.14.3-x86_64.tar.gz ./bin/patchelf --strip-components=2
 
 for lib in toolchain/lib/*; do
     if [[ ! "$lib" = "toolchain/lib/libc.so.6"* ]]; then
