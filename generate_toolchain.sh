@@ -15,7 +15,15 @@ cp -r -L /opt/exodus/bundles/*/lib/x86_64-linux-gnu/* toolchain/lib/
 
 cp -r -L /opt/exodus/bundles/*/usr/lib/x86_64-linux-gnu/* toolchain/lib/
 
-cp -L /lib/x86_64-linux-gnu/libresolv.so.2 toolchain/lib/
+cp -L \
+      /lib/x86_64-linux-gnu/libresolv.so.2 \
+      /lib/x86_64-linux-gnu/libnss_nisplus.so.2 \
+      /lib/x86_64-linux-gnu/libnss_compat.so.2 \
+      /lib/x86_64-linux-gnu/libnss_dns.so.2 \
+      /lib/x86_64-linux-gnu/libnss_files.so.2 \
+      /lib/x86_64-linux-gnu/libnss_hesiod.so.2 \
+      /lib/x86_64-linux-gnu/libnss_nis.so.2 \
+    toolchain/lib/
 
 gcc -shared -fPIC /disable_ld_preload.c -o toolchain/lib/disable_ld_preload.so -ldl
 
@@ -36,8 +44,7 @@ done
 cp /usr/lib/llvm-13/bin/llvm-symbolizer toolchain/bin/
 
 for bin in toolchain/bin/*; do
-    # Set PT_INTERP to a non-existing path so that ldb toolchains with setup won't work at all
-    ./patchelf --set-interpreter "/dev/null" --set-rpath '$ORIGIN/../lib' "$bin"
+    ./patchelf --set-interpreter "$PWD/toolchain/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../lib' "$bin"
 done
 
 ln -sf ld.bfd toolchain/bin/ld
@@ -495,8 +502,7 @@ do
     p=$(basename $f)
     g=${p::-2}
     cp -L $f toolchain/lib/gcc/x86_64-linux-gnu/11/$g
-    # Set PT_INTERP to a non-existing path so that ldb toolchains with setup won't work at all
-    ./patchelf --set-interpreter "/dev/null" --set-rpath '$ORIGIN/../../..' toolchain/lib/gcc/x86_64-linux-gnu/11/$g
+    ./patchelf --set-interpreter "$PWD/toolchain/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../../..' toolchain/lib/gcc/x86_64-linux-gnu/11/$g
 done
 
 cp -r -L /usr/lib/gcc/x86_64-linux-gnu/11/crtbegin.o \
@@ -542,6 +548,28 @@ mkdir -p toolchain/include/c++
 
 cp -r /usr/include/x86_64-linux-gnu/c++/11 toolchain/include/x86_64-linux-gnu/c++/
 cp -r /usr/include/c++/11 toolchain/include/c++/
+
+# libc++
+
+cp -r /usr/lib/llvm-13/include/c++/v1 toolchain/include/c++/
+
+cp -L \
+        /usr/lib/llvm-13/lib/libunwind.so \
+        /usr/lib/llvm-13/lib/libc++abi.so \
+        /usr/lib/llvm-13/lib/libc++.so.1 \
+        /usr/lib/llvm-13/lib/libunwind.a \
+        /usr/lib/llvm-13/lib/libc++.a \
+        /usr/lib/llvm-13/lib/libc++experimental.a \
+        /usr/lib/llvm-13/lib/libc++abi.a \
+    toolchain/lib/
+
+./patchelf --set-rpath '$ORIGIN' toolchain/lib/libc++.so.1
+./patchelf --set-rpath '$ORIGIN' toolchain/lib/libc++abi.so
+./patchelf --set-rpath '$ORIGIN' toolchain/lib/libunwind.so
+echo "INPUT(./libc++.so.1 -lunwind -lc++abi)" >toolchain/lib/libc++.so
+
+# For cmake file DOWNLOAD support
+./patchelf --add-needed libnss_files.so.2 --add-needed libnss_dns.so.2 toolchain/bin/cmake
 
 cp ./patchelf toolchain/bin/
 cp -r /tests toolchain/test
