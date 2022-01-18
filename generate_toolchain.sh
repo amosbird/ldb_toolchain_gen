@@ -512,7 +512,6 @@ cp -r -L /usr/lib/gcc/x86_64-linux-gnu/11/crtbegin.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/crtend.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcc_eh.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a \
-         /lib/x86_64-linux-gnu/libgcc_s.so.1 \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++fs.a \
@@ -533,8 +532,15 @@ done
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
-GROUP ( ./libgcc_s.so.1 -lgcc )
+GROUP ( ../../../libgcc_s.so.1 -lgcc )
 " >toolchain/lib/gcc/x86_64-linux-gnu/11/libgcc_s.so
+
+# Sometimes static linking might still link to libgcc_s. Use ld script to redirect.
+echo "/* GNU ld script
+   Use the shared library, but some functions are only in
+   the static library.  */
+GROUP ( -lgcc )
+" >toolchain/lib/gcc/x86_64-linux-gnu/11/libgcc_s.a
 
 cp -r -L /usr/lib/clang/13.0.1 toolchain/lib/clang/
 
