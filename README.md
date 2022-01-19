@@ -1,5 +1,9 @@
 # Linux Distribution Based Toolchain Generator
 
+## TDLR
+
+LDB toolchain generator gives you a working gcc-11 and clang-13 environment with cmake 3.22. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
+
 ## Introduction
 
 LDB toolchain generator help generate toolchains derived from well-known linux distributions (LDB toolchain). LDB toolchain contains binaries from well-known linux distributions, which are heavily tested and optimized. It avoids the docker dependency which usually complicate the developing workflow. Projects adopting LDB toolchain will likely generate byte-identical binaries. It benefits testing and debugging due to 100% consistency. It also lowers the bar of contributing code, as large C/C++ projects are usually daunting to build compared to Java, Golang, Rust, etc.
@@ -13,7 +17,7 @@ There are projects like Crosstool-NG and Gentoo-Prefix which aim at bootstraping
 
 [Exodus](https://github.com/intoli/exodus) generates relocate Linux ELF binaries with wrappers and dependencies. Dependencies are recursively collected. Wrappers are usually good enough for common tools. However, toolchains like GCC and Clang relies heavily on `/proc/self` to re-exec the driver program multiple times, which will not work for `ld-linux` wrappers. As a result, we use [patchelf](https://github.com/NixOS/patchelf) to modify `PT_INTERP` and `RPATH`. Though `RPATH` can be relative to the binary's location, it's not possible to make a relocatable a.out that can tolerate changes to the absolute path of `ld-linux`. Thus, LDB toolchain generator requires user to specify a **toolchain prefix**.
 
-## How to use
+## How to generate a LDB toolchain generator
 
 The main branch illustrate how the generator assembles gcc-11 and clang-13 from ubuntu-18.04.
 
@@ -51,15 +55,3 @@ The main branch is used to build [ClickHouse](https://github.com/ClickHouse/Clic
 ## How to avoid GLIBC incompatibility
 
 LDB toolchain might use newer libc which in turn will generate binaries that cannot be run on old host, even the same host for compilation. Users will encounter errors like `version GLIBC_2.27 not found`. A practical way of resolving this issue is described at http://www.lightofdawn.org/wiki/wiki.cgi/NewAppsOnOldGlibc .
-
-## Pre-built generators
-
-In case building the generator is impossible, currently two generators are provided on the release page: `ldb_toolchain_gen.sh` and `doris_ldb_toolchain_gen`.
-
-```
-./ldb_toolchain_gen.sh /tmp/toolchain
-
-/tmp/toolchain/bin/gcc -v
-```
-
-TODO: Find a way to avoid any ld preload errors.

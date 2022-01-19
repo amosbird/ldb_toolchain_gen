@@ -50,6 +50,7 @@ done
 ln -sf ld.bfd toolchain/bin/ld
 ln -sf ld.bfd toolchain/bin/x86_64-pc-linux-gnu-ld # clang tries to find this linker
 ln -sf lld-13 toolchain/bin/ld.lld
+ln -sf lld-13 toolchain/bin/ld.lld-13
 ln -sf clang-13 toolchain/bin/clang++-13
 ln -sf llvm-objcopy-13 toolchain/bin/objcopy
 ln -sf llvm-objdump-13 toolchain/bin/objdump
