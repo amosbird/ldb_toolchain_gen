@@ -74,7 +74,7 @@ tar xzf /opt/cmake-3.22.1-linux-x86_64.tar.gz --strip-components=1 --exclude='*/
 
 mkdir -p toolchain/usr/lib
 
-cp --parents \
+cp -r --parents \
     /usr/include/alloca.h \
     /usr/include/ansidecl.h \
     /usr/include/ar.h \
@@ -123,43 +123,7 @@ cp --parents \
     /usr/include/libintl.h \
     /usr/include/limits.h \
     /usr/include/link.h \
-    /usr/include/linux/a.out.h \
-    /usr/include/linux/aio_abi.h \
-    /usr/include/linux/byteorder/little_endian.h \
-    /usr/include/linux/capability.h \
-    /usr/include/linux/const.h \
-    /usr/include/linux/errno.h \
-    /usr/include/linux/errqueue.h \
-    /usr/include/linux/falloc.h \
-    /usr/include/linux/fs.h \
-    /usr/include/linux/futex.h \
-    /usr/include/linux/genetlink.h \
-    /usr/include/linux/if_ether.h \
-    /usr/include/linux/if_packet.h \
-    /usr/include/linux/ioctl.h \
-    /usr/include/linux/irqnr.h \
-    /usr/include/linux/kernel.h \
-    /usr/include/linux/limits.h \
-    /usr/include/linux/magic.h \
-    /usr/include/linux/mman.h \
-    /usr/include/linux/net_tstamp.h \
-    /usr/include/linux/netlink.h \
-    /usr/include/linux/param.h \
-    /usr/include/linux/perf_event.h \
-    /usr/include/linux/posix_types.h \
-    /usr/include/linux/prctl.h \
-    /usr/include/linux/random.h \
-    /usr/include/linux/socket.h \
-    /usr/include/linux/sockios.h \
-    /usr/include/linux/stddef.h \
-    /usr/include/linux/swab.h \
-    /usr/include/linux/sysctl.h \
-    /usr/include/linux/sysinfo.h \
-    /usr/include/linux/taskstats.h \
-    /usr/include/linux/tls.h \
-    /usr/include/linux/types.h \
-    /usr/include/linux/unistd.h \
-    /usr/include/linux/version.h \
+    /usr/include/linux \
     /usr/include/locale.h \
     /usr/include/malloc.h \
     /usr/include/math.h \
