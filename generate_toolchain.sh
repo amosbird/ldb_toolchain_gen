@@ -149,6 +149,7 @@ cp -r --parents \
     /usr/include/resolv.h \
     /usr/include/rpc/netdb.h \
     /usr/include/sched.h \
+    /usr/include/search.h \
     /usr/include/semaphore.h \
     /usr/include/setjmp.h \
     /usr/include/shadow.h \
@@ -348,6 +349,7 @@ cp -r --parents \
     /usr/include/x86_64-linux-gnu/bits/wordsize.h \
     /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
     /usr/include/x86_64-linux-gnu/bits/xtitypes.h \
+    /usr/include/x86_64-linux-gnu/fpu_control.h \
     /usr/include/x86_64-linux-gnu/gnu/libc-version.h \
     /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
     /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -480,6 +482,8 @@ cp -r -L /usr/lib/gcc/x86_64-linux-gnu/11/crtbegin.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++fs.a \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libatomic.so \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libatomic.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libasan.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcov.a \
