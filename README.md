@@ -4,6 +4,27 @@
 
 LDB toolchain generator gives you a working gcc-11 and clang-13 environment with cmake 3.22. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
 
+## How to install
+
+1. Download `ldb_toolchain_gen.sh` from [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases)
+
+2. Execute the following command to generate LDB toolchain
+
+``` sh
+sh ldb_toolchain_gen.sh /path/to/ldb_toolchain/
+```
+
+`/path/to/ldb_toolchain/` is the directory where the toolchain is installed. The following directory structure will be created.
+
+``` sh
+├── bin
+├── include
+├── lib
+├── share
+├── test
+└── usr
+```
+
 ## Introduction
 
 LDB toolchain generator help generate toolchains derived from well-known linux distributions (LDB toolchain). LDB toolchain contains binaries from well-known linux distributions, which are heavily tested and optimized. It avoids the docker dependency which usually complicate the developing workflow. Projects adopting LDB toolchain will likely generate byte-identical binaries. It benefits testing and debugging due to 100% consistency. It also lowers the bar of contributing code, as large C/C++ projects are usually daunting to build compared to Java, Golang, Rust, etc.
