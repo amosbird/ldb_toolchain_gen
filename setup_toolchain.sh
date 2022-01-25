@@ -7,6 +7,11 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+if [ -s /etc/ld.so.preload ]; then
+    echo "Cannot use ldb toolchain with non-empty /etc/ld.so.preload"
+    exit 1
+fi
+
 dir=$1
 
 if [[ ! "$dir" = "/"* ]]; then

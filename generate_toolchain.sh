@@ -549,6 +549,9 @@ echo "INPUT(./libc++.so.1 -lunwind -lc++abi)" >toolchain/lib/libc++.so
 cp ./patchelf toolchain/bin/
 cp -r /tests toolchain/test
 
+cp -r /usr/share/bison toolchain/share/
+cp -r /usr/share/aclocal toolchain/share/
+
 tar czf toolchain.tgz toolchain
 
 cat /setup_toolchain.sh toolchain.tgz > ldb_toolchain_gen.sh
