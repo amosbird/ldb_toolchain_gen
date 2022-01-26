@@ -58,6 +58,11 @@ ln -sf clang-cpp-13 toolchain/bin/cpp
 ln -sf llvm-ar-13 toolchain/bin/ar
 ln -sf llvm-ranlib-13 toolchain/bin/ranlib
 ln -sf llvm-nm-13 toolchain/bin/nm
+ln -sf lldb-13 toolchain/bin/lldb
+ln -sf clangd-13 toolchain/bin/clangd
+ln -sf clang-tidy-13 toolchain/bin/clang-tidy
+mv toolchain/bin/lldb-server-13 toolchain/bin/lldb-server-13.0.1
+
 # ln -sf gcc-ranlib-11 toolchain/bin/ranlib
 # ln -sf gcc-ar-11 toolchain/bin/ar
 # ln -sf gcc-nm-11 toolchain/bin/nm
@@ -69,6 +74,13 @@ ln -sf llvm-nm-13 toolchain/bin/nm
 cp -L /opt/exodus/bundles/*/usr/bin/linker-* toolchain/lib/ld-linux-x86-64.so.2
 
 tar xzf /opt/cmake-3.22.1-linux-x86_64.tar.gz --strip-components=1 --exclude='*/doc' --exclude='*/man' -C toolchain
+
+# JDK and Maven are too large
+# mkdir toolchain/apache-maven-3.8.4
+# tar xzf /opt/apache-maven-3.8.4-bin.tar.gz --strip-components=1 -C toolchain/apache-maven-3.8.4
+
+# mkdir toolchain/openjdk-11.0.2
+# tar xzf /opt/openjdk-11.0.2_linux-x64_bin.tar.gz --strip-components=1 -C toolchain/openjdk-11.0.2
 
 # Setup sysroot
 
@@ -548,6 +560,11 @@ echo "INPUT(./libc++.so.1 -lunwind -lc++abi)" >toolchain/lib/libc++.so
 
 cp ./patchelf toolchain/bin/
 cp -r /tests toolchain/test
+
+cp -r /usr/lib/python3.6 toolchain/lib/
+cp -r /usr/share/gdb toolchain/share/
+
+cp /usr/bin/gdb-add-index toolchain/bin/
 
 cp -r /usr/share/bison toolchain/share/
 cp -r /usr/share/aclocal toolchain/share/

@@ -58,6 +58,8 @@ if ! bin/gcc test/a.c -o test/a; then
 fi
 
 echo "Congratulations! LDB toolchain is setup at $dir. export PATH=\"$dir/bin\":\$PATH to take full advantage."
+# JDK and Maven are too large
+# echo "NOTE: openjdk and apache-maven are also provided under $dir"
 echo "NOTE: LDB toolchain cannot be relocated to other directories manually. Instead, generate it again using $0"
 
 exit 0

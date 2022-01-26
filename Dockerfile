@@ -50,6 +50,8 @@ RUN apt install flex --yes --no-install-recommends
 
 RUN apt install autoconf --yes --no-install-recommends
 
+RUN apt update && apt install clangd-${LLVM_VERSION} --yes --no-install-recommends
+
 RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.tar.gz && \
     cd /opt && \
     tar zxf bison-3.5.1.tar.gz && \
@@ -60,7 +62,15 @@ RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.ta
     cd .. && \
     rm -rf bison-3.5.1 bison-3.5.1.tar.gz
 
-RUN exodus /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd /usr/bin/clang-cpp-13 /usr/bin/x86_64-linux-gnu-cpp-11 /usr/bin/gcc-ranlib-11 /usr/bin/g++-11 /usr/bin/gcc-ar-11 /usr/bin/gcc-nm-11 /usr/bin/gcc-11 /usr/bin/llvm-objdump-13 /usr/bin/llvm-objcopy-13 /usr/bin/llvm-ranlib-13 /usr/bin/llvm-ar-13 /usr/bin/llvm-nm-13 /usr/bin/clang-13 /usr/bin/lld-13 /usr/bin/ninja /usr/lib/gcc/x86_64-linux-gnu/11/lto1 /usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper /usr/lib/gcc/x86_64-linux-gnu/11/g++-mapper-server /usr/lib/gcc/x86_64-linux-gnu/11/cc1 /usr/lib/gcc/x86_64-linux-gnu/11/cc1plus /usr/lib/gcc/x86_64-linux-gnu/11/collect2 | bash
+RUN apt install gdb --yes --no-install-recommends
+
+RUN wget https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz -O /opt/openjdk-11.0.2_linux-x64_bin.tar.gz
+
+RUN wget https://dlcdn.apache.org/maven/maven-3/3.8.4/binaries/apache-maven-3.8.4-bin.tar.gz -O /opt/apache-maven-3.8.4-bin.tar.gz
+
+RUN exodus /usr/bin/gdb /usr/bin/lldb-argdumper-13 /usr/bin/lldb-instr-13 /usr/bin/lldb-server-13 /usr/bin/lldb-vscode-13 /usr/bin/lldb-13 /usr/bin/clangd-13 /usr/bin/clang-tidy-13 /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd /usr/bin/clang-cpp-13 /usr/bin/x86_64-linux-gnu-cpp-11 /usr/bin/gcc-ranlib-11 /usr/bin/g++-11 /usr/bin/gcc-ar-11 /usr/bin/gcc-nm-11 /usr/bin/gcc-11 /usr/bin/llvm-objdump-13 /usr/bin/llvm-objcopy-13 /usr/bin/llvm-ranlib-13 /usr/bin/llvm-ar-13 /usr/bin/llvm-nm-13 /usr/bin/clang-13 /usr/bin/lld-13 /usr/bin/ninja /usr/lib/gcc/x86_64-linux-gnu/11/lto1 /usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper /usr/lib/gcc/x86_64-linux-gnu/11/g++-mapper-server /usr/lib/gcc/x86_64-linux-gnu/11/cc1 /usr/lib/gcc/x86_64-linux-gnu/11/cc1plus /usr/lib/gcc/x86_64-linux-gnu/11/collect2 | bash
+
+RUN cp /usr/lib/libsource-highlight.so.4 /opt/exodus/bundles/*/usr/lib/x86_64-linux-gnu/
 
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
