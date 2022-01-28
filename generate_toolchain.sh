@@ -25,6 +25,10 @@ cp -L \
       /lib/x86_64-linux-gnu/libnss_nis.so.2 \
     toolchain/lib/
 
+# Provide gperf CPU profiler
+cp -L /usr/lib/x86_64-linux-gnu/libprofiler.so.0.4.8 toolchain/lib/libprofiler.so
+cp -L /usr/lib/x86_64-linux-gnu/libunwind.so.8 toolchain/lib/
+
 gcc -shared -fPIC /disable_ld_preload.c -o toolchain/lib/disable_ld_preload.so -ldl
 
 tar xzf /opt/patchelf-0.14.3-x86_64.tar.gz ./bin/patchelf --strip-components=2
@@ -466,7 +470,7 @@ GROUP ( ./libm-2.27.a ./libmvec.a )
 cp -L /usr/lib/x86_64-linux-gnu/libm-2.27.a toolchain/usr/lib/
 cp -L /usr/lib/x86_64-linux-gnu/libmvec.a toolchain/usr/lib/
 
-cp /wrappers/{gcc,g++,clang,clang++} toolchain/bin/
+cp /wrappers/* toolchain/bin/
 
 # Setup gcc and clang toolchains
 
@@ -485,10 +489,10 @@ do
 done
 
 cp -r -L /usr/lib/gcc/x86_64-linux-gnu/11/crtbegin.o \
-         /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginT.o \
-         /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o \
-         /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/crtend.o \
+         /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginT.o \
+         /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o \
+         /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcc_eh.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.so \
@@ -497,12 +501,33 @@ cp -r -L /usr/lib/gcc/x86_64-linux-gnu/11/crtbegin.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/libatomic.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libatomic.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so \
-         /usr/lib/gcc/x86_64-linux-gnu/11/libasan.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcov.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libsanitizer.spec \
          /usr/lib/gcc/x86_64-linux-gnu/11/libasan_preinit.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/libasan.a \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libasan.so \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libtsan.a \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libtsan.so \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libubsan.a \
+         /usr/lib/gcc/x86_64-linux-gnu/11/libubsan.so \
+         /usr/lib/gcc/x86_64-linux-gnu/11/liblsan_preinit.o \
+         /usr/lib/gcc/x86_64-linux-gnu/11/liblsan.a \
+         /usr/lib/gcc/x86_64-linux-gnu/11/liblsan.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/include \
+    toolchain/lib/gcc/x86_64-linux-gnu/11
+
+# gomp
+cp -r -L \
+    /usr/lib/gcc/x86_64-linux-gnu/11/crtfastmath.o \
+    /usr/lib/gcc/x86_64-linux-gnu/11/crtoffloadbegin.o \
+    /usr/lib/gcc/x86_64-linux-gnu/11/crtoffloadend.o \
+    /usr/lib/gcc/x86_64-linux-gnu/11/crtoffloadtable.o \
+    /usr/lib/gcc/x86_64-linux-gnu/11/crtprec32.o \
+    /usr/lib/gcc/x86_64-linux-gnu/11/crtprec64.o \
+    /usr/lib/gcc/x86_64-linux-gnu/11/crtprec80.o \
+    /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.a \
+    /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so \
+    /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.spec \
     toolchain/lib/gcc/x86_64-linux-gnu/11
 
 for so in toolchain/lib/gcc/x86_64-linux-gnu/11/*.so
@@ -565,6 +590,7 @@ cp -r /usr/lib/python3.6 toolchain/lib/
 cp -r /usr/share/gdb toolchain/share/
 
 cp /usr/bin/gdb-add-index toolchain/bin/
+cp /usr/bin/google-pprof toolchain/bin/pprof
 
 cp -r /usr/share/bison toolchain/share/
 cp -r /usr/share/aclocal toolchain/share/

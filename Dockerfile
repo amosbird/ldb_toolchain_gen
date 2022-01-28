@@ -72,11 +72,13 @@ RUN exodus /usr/bin/gdb /usr/bin/lldb-argdumper-13 /usr/bin/lldb-instr-13 /usr/b
 
 RUN cp /usr/lib/libsource-highlight.so.4 /opt/exodus/bundles/*/usr/lib/x86_64-linux-gnu/
 
+RUN apt install google-perftools --yes --no-install-recommends
+
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
 RUN mkdir /wrappers
 
-COPY gcc g++ clang clang++ /wrappers/
+COPY ldb_gperf gcc g++ clang clang++ /wrappers/
 
 RUN mkdir /tests
 
