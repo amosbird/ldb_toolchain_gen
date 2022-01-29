@@ -80,6 +80,8 @@ RUN mkdir /tests
 
 COPY a.c /tests/
 
+ADD glibc-compatibility /glibc-compatibility
+
 WORKDIR /data
 
 ENTRYPOINT [ "/generate_toolchain.sh" ]

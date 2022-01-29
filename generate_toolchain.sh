@@ -426,7 +426,7 @@ echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-x86-64)
-GROUP ( ../../lib/libc.so.6 ./libc_nonshared.a  AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
+GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a  AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
 " >toolchain/usr/lib/libc.so
 
 echo "/* GNU ld script
@@ -437,7 +437,14 @@ GROUP ( ../../lib/libpthread.so.0 ./libpthread_nonshared.a )
 " >toolchain/usr/lib/libpthread.so
 
 ln -s ../../lib/libdl.so.2 toolchain/usr/lib/libdl.so
-ln -s ../../lib/libm.so.6 toolchain/usr/lib/libm.so
+
+echo "/* GNU ld script
+   Use the shared library, but some functions are only in
+   the static library, so try that secondarily.  */
+OUTPUT_FORMAT(elf64-x86-64)
+GROUP ( ./libglibc-compatibility.a ../../lib/libm.so.6 )
+" >toolchain/usr/lib/libm.so
+
 ln -s ../../lib/libresolv.so.2 toolchain/usr/lib/libresolv.so
 ln -s ../../lib/librt.so.1 toolchain/usr/lib/librt.so
 
@@ -465,7 +472,7 @@ cp -L /usr/lib/x86_64-linux-gnu/libffi_pic.a toolchain/usr/lib/
 echo "/* GNU ld script
 */
 OUTPUT_FORMAT(elf64-x86-64)
-GROUP ( ./libm-2.27.a ./libmvec.a )
+GROUP ( ./libglibc-compatibility.a ./libm-2.27.a ./libmvec.a )
 " >toolchain/usr/lib/libm.a
 cp -L /usr/lib/x86_64-linux-gnu/libm-2.27.a toolchain/usr/lib/
 cp -L /usr/lib/x86_64-linux-gnu/libmvec.a toolchain/usr/lib/
@@ -597,6 +604,16 @@ cp /usr/bin/google-pprof toolchain/bin/pprof
 
 cp -r /usr/share/bison toolchain/share/
 cp -r /usr/share/aclocal toolchain/share/
+
+(
+    cd /glibc-compatibility
+    mkdir -p build
+    cd build
+    /data/toolchain/bin/cmake -DCMAKE_C_COMPILER=/usr/lib/llvm-13/bin/clang -DCMAKE_CXX_COMPILER=/usr/lib/llvm-13/bin/clang++ ..
+    make
+) &> /dev/null
+
+cp /glibc-compatibility/build/libglibc-compatibility.a toolchain/usr/lib/
 
 tar czf toolchain.tgz toolchain
 
