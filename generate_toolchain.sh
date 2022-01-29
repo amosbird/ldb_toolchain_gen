@@ -470,6 +470,9 @@ GROUP ( ./libm-2.27.a ./libmvec.a )
 cp -L /usr/lib/x86_64-linux-gnu/libm-2.27.a toolchain/usr/lib/
 cp -L /usr/lib/x86_64-linux-gnu/libmvec.a toolchain/usr/lib/
 
+# We provide bison wrapper to make sure it picks up our m4 and pkg data
+mv toolchain/bin/bison toolchain/bin/bison-3.5.1
+
 cp /wrappers/* toolchain/bin/
 
 # Setup gcc and clang toolchains
