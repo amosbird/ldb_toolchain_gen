@@ -65,6 +65,7 @@ ln -sf llvm-nm-13 toolchain/bin/nm
 ln -sf lldb-13 toolchain/bin/lldb
 ln -sf clangd-13 toolchain/bin/clangd
 ln -sf clang-tidy-13 toolchain/bin/clang-tidy
+ln -sf gcc toolchain/bin/cc
 mv toolchain/bin/lldb-server-13 toolchain/bin/lldb-server-13.0.1
 
 # ln -sf gcc-ranlib-11 toolchain/bin/ranlib
@@ -415,12 +416,79 @@ cp -r --parents \
     /usr/include/x86_64-linux-gnu/sys/wait.h \
     toolchain
 
+# Additional packages
+cp -r --parents \
+    /usr/include/zlib.h \
+    /usr/include/zconf.h \
+    /usr/include/openssl \
+    /usr/include/x86_64-linux-gnu/openssl \
+    toolchain
+
+# compiler-rt
+cp -r --parents \
+    /usr/include/crypt.h \
+    /usr/include/fstab.h \
+    /usr/include/mqueue.h \
+    /usr/include/net/if_ppp.h \
+    /usr/include/net/route.h \
+    /usr/include/netax25/ax25.h \
+    /usr/include/netinet/ether.h \
+    /usr/include/net/ppp_defs.h \
+    /usr/include/netinet/if_ether.h \
+    /usr/include/netipx/ipx.h \
+    /usr/include/netrom/netrom.h \
+    /usr/include/obstack.h \
+    /usr/include/scsi/scsi.h \
+    /usr/include/utmp.h \
+    /usr/include/utmpx.h \
+    /usr/include/x86_64-linux-gnu/bits/mqueue.h \
+    /usr/include/x86_64-linux-gnu/bits/mqueue2.h \
+    /usr/include/x86_64-linux-gnu/bits/msq.h \
+    /usr/include/x86_64-linux-gnu/bits/utmp.h \
+    /usr/include/x86_64-linux-gnu/bits/utmpx.h \
+    /usr/include/x86_64-linux-gnu/sys/kd.h \
+    /usr/include/x86_64-linux-gnu/sys/msg.h \
+    /usr/include/x86_64-linux-gnu/sys/mtio.h \
+    /usr/include/x86_64-linux-gnu/sys/personality.h \
+    /usr/include/x86_64-linux-gnu/sys/timeb.h \
+    /usr/include/x86_64-linux-gnu/sys/timex.h \
+    /usr/include/x86_64-linux-gnu/sys/vt.h \
+    toolchain
+
+# Python-3.6.6
+cp -r --parents \
+    /usr/include/rpc \
+    /usr/include/rpcsvc \
+    /usr/include/x86_64-linux-gnu/sys/soundcard.h \
+    toolchain
+
 # Additional libs
-cp -L /usr/lib/x86_64-linux-gnu/libiberty.a toolchain/usr/lib/
-cp -L /usr/lib/x86_64-linux-gnu/libbfd.a toolchain/usr/lib/
-cp -L /usr/lib/x86_64-linux-gnu/libbfd.so toolchain/usr/lib/
-cp -L /usr/lib/x86_64-linux-gnu/libcrypt.a toolchain/usr/lib/
-cp -L /usr/lib/x86_64-linux-gnu/libcrypt.so toolchain/usr/lib/
+cp -L \
+    /usr/lib/x86_64-linux-gnu/libiberty.a \
+    /usr/lib/x86_64-linux-gnu/libz.a \
+    /usr/lib/x86_64-linux-gnu/libbfd.a \
+    /usr/lib/x86_64-linux-gnu/libcrypt.a \
+    /usr/lib/x86_64-linux-gnu/libtinfo.a \
+    /usr/lib/x86_64-linux-gnu/libtic.a \
+    /usr/lib/x86_64-linux-gnu/libtermcap.a \
+    /usr/lib/x86_64-linux-gnu/libssl.a \
+    /usr/lib/x86_64-linux-gnu/libcrypto.a \
+    /usr/lib/x86_64-linux-gnu/libnsl.a \
+    toolchain/usr/lib/
+
+# Additional libs usually don't provide stable abi.
+# Let's also force static link
+# TODO header files are incomplete. Also cmake might still find system libs instead
+# for lib in libz libbfd libcrypt libtinfo libtic libssl libcrypto libnsl; do
+#     echo "OUTPUT_FORMAT(elf64-x86-64)
+# GROUP ( ./$lib.a )
+# " >toolchain/usr/lib/$lib.so
+# done
+# TODO ubuntu static libs are mostly compiled without -fPIC. Have to use .so for now.
+# TODO Will it break anything? Perhaps we should only provide .a files
+for lib in libz libbfd libcrypt libtinfo libtic libtermcap libssl libcrypto libnsl; do
+    cp -L /usr/lib/x86_64-linux-gnu/$lib.so toolchain/usr/lib/$lib.so
+done
 
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
@@ -505,7 +573,6 @@ cp -r -L /usr/lib/gcc/x86_64-linux-gnu/11/crtbegin.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcc_eh.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a \
-         /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.so \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++fs.a \
          /usr/lib/gcc/x86_64-linux-gnu/11/libatomic.so \
@@ -544,6 +611,12 @@ for so in toolchain/lib/gcc/x86_64-linux-gnu/11/*.so
 do
     ./patchelf --set-rpath '$ORIGIN/../../..' "$so"
 done
+
+echo "/* GNU ld script
+   Use the shared library, but some functions are only in
+   the static library.  */
+GROUP ( ./libstdc++.a ./libstdc++fs.a )
+" >toolchain/lib/gcc/x86_64-linux-gnu/11/libstdc++.so
 
 echo "/* GNU ld script
    Use the shared library, but some functions are only in

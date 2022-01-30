@@ -70,6 +70,8 @@ RUN cp /usr/lib/libsource-highlight.so.4 /opt/exodus/bundles/*/usr/lib/x86_64-li
 
 RUN apt install google-perftools --yes --no-install-recommends
 
+RUN apt install libssl-dev --yes --no-install-recommends
+
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
 RUN mkdir /wrappers
