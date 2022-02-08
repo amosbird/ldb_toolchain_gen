@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+export PATH="$DIR":$PATH
+
+http_endpoint=$1 # required
+query_id=$2      # required
+
+if [[ -z $http_endpoint || -z $query_id ]]; then
+    echo "$(basename "$0") <http_endpoint> <query_id>"
+    exit 1
+fi
+
+tfg.py -t pyspy <(curl -s "$1" -d "SELECT arrayStringConcat(arrayReverse(arrayMap(x -> demangle(addressToSymbol(x)), trace)), ';') || ' ' || toString(count()) FROM system.trace_log WHERE trace_type = 'CPU' and query_id = '$2' and event_date != today() - 10000 GROUP BY trace settings allow_introspection_functions = 1 format TSVRaw")
