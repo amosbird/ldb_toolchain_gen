@@ -669,6 +669,7 @@ echo "INPUT(./libc++.so.1 -lunwind -lc++abi)" >toolchain/lib/libc++.so
 cp ./patchelf toolchain/bin/
 cp -r /tests toolchain/test
 
+mv toolchain/bin/python3 toolchain/bin/ldb-python3
 cp -r /usr/lib/python3.6 toolchain/lib/
 cp -r /usr/share/gdb toolchain/share/
 
