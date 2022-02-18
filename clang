@@ -4,4 +4,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export PATH="$DIR":$PATH
 
-exec "$DIR/clang-13" --sysroot "$DIR/.." "$@"
+exec "$DIR/clang-14" --sysroot "$DIR/.." "$@"

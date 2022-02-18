@@ -45,7 +45,7 @@ for f in /opt/exodus/bundles/*/usr/bin/*-x; do
     cp $f toolchain/bin/$g
 done
 
-cp /usr/lib/llvm-13/bin/llvm-symbolizer toolchain/bin/
+cp /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer toolchain/bin/
 
 for bin in toolchain/bin/*; do
     ./patchelf --set-interpreter "$PWD/toolchain/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../lib' "$bin"
@@ -53,20 +53,20 @@ done
 
 ln -sf ld.bfd toolchain/bin/ld
 ln -sf ld.bfd toolchain/bin/x86_64-pc-linux-gnu-ld # clang tries to find this linker
-ln -sf lld-13 toolchain/bin/ld.lld
-ln -sf lld-13 toolchain/bin/ld.lld-13
-ln -sf clang-13 toolchain/bin/clang++-13
-ln -sf llvm-objcopy-13 toolchain/bin/objcopy
-ln -sf llvm-objdump-13 toolchain/bin/objdump
-ln -sf clang-cpp-13 toolchain/bin/cpp
-ln -sf llvm-ar-13 toolchain/bin/ar
-ln -sf llvm-ranlib-13 toolchain/bin/ranlib
-ln -sf llvm-nm-13 toolchain/bin/nm
-ln -sf lldb-13 toolchain/bin/lldb
-ln -sf clangd-13 toolchain/bin/clangd
-ln -sf clang-tidy-13 toolchain/bin/clang-tidy
+ln -sf lld-${LLVM_VERSION} toolchain/bin/ld.lld
+ln -sf lld-${LLVM_VERSION} toolchain/bin/ld.lld-${LLVM_VERSION}
+ln -sf clang-${LLVM_VERSION} toolchain/bin/clang++-${LLVM_VERSION}
+ln -sf llvm-objcopy-${LLVM_VERSION} toolchain/bin/objcopy
+ln -sf llvm-objdump-${LLVM_VERSION} toolchain/bin/objdump
+ln -sf clang-cpp-${LLVM_VERSION} toolchain/bin/cpp
+ln -sf llvm-ar-${LLVM_VERSION} toolchain/bin/ar
+ln -sf llvm-ranlib-${LLVM_VERSION} toolchain/bin/ranlib
+ln -sf llvm-nm-${LLVM_VERSION} toolchain/bin/nm
+ln -sf lldb-${LLVM_VERSION} toolchain/bin/lldb
+ln -sf clangd-${LLVM_VERSION} toolchain/bin/clangd
+ln -sf clang-tidy-${LLVM_VERSION} toolchain/bin/clang-tidy
 ln -sf gcc toolchain/bin/cc
-mv toolchain/bin/lldb-server-13 toolchain/bin/lldb-server-13.0.1
+mv toolchain/bin/lldb-server-${LLVM_VERSION} toolchain/bin/lldb-server-${LLVM_VERSION}.0.1
 
 # ln -sf gcc-ranlib-11 toolchain/bin/ranlib
 # ln -sf gcc-ar-11 toolchain/bin/ar
@@ -550,11 +550,7 @@ mv toolchain/bin/bison toolchain/bin/bison-3.5.1
 
 cp -r /wrappers/* toolchain/bin/
 
-# Setup gcc and clang toolchains
-
-mkdir -p toolchain/lib/clang
-
-cp -r -L /usr/lib/clang/13.0.1 toolchain/lib/clang/
+# Setup gcc toolchains
 
 mkdir -p toolchain/lib/gcc/x86_64-linux-gnu/11
 
@@ -631,31 +627,35 @@ echo "/* GNU ld script
 GROUP ( -lgcc )
 " >toolchain/lib/gcc/x86_64-linux-gnu/11/libgcc_s.a
 
-cp -r -L /usr/lib/clang/13.0.1 toolchain/lib/clang/
-
-for so in toolchain/lib/clang/13.0.1/lib/linux/*.so
-do
-    ./patchelf --set-rpath '$ORIGIN/../../../..' "$so"
-done
-
 mkdir -p toolchain/include/x86_64-linux-gnu/c++
 mkdir -p toolchain/include/c++
 
 cp -r /usr/include/x86_64-linux-gnu/c++/11 toolchain/include/x86_64-linux-gnu/c++/
 cp -r /usr/include/c++/11 toolchain/include/c++/
 
+# Setup clang toolchains
+
+mkdir -p toolchain/lib/clang
+
+cp -r -L /usr/lib/clang/${LLVM_VERSION} toolchain/lib/clang/${LLVM_VERSION_FULL}
+
+for so in toolchain/lib/clang/${LLVM_VERSION_FULL}/lib/linux/*.so
+do
+    ./patchelf --set-rpath '$ORIGIN/../../../..' "$so"
+done
+
 # libc++
 
-cp -r /usr/lib/llvm-13/include/c++/v1 toolchain/include/c++/
+cp -r /usr/lib/llvm-${LLVM_VERSION}/include/c++/v1 toolchain/include/c++/
 
 cp -L \
-        /usr/lib/llvm-13/lib/libunwind.so \
-        /usr/lib/llvm-13/lib/libc++abi.so \
-        /usr/lib/llvm-13/lib/libc++.so.1 \
-        /usr/lib/llvm-13/lib/libunwind.a \
-        /usr/lib/llvm-13/lib/libc++.a \
-        /usr/lib/llvm-13/lib/libc++experimental.a \
-        /usr/lib/llvm-13/lib/libc++abi.a \
+        /usr/lib/llvm-${LLVM_VERSION}/lib/libunwind.so \
+        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++abi.so \
+        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++.so.1 \
+        /usr/lib/llvm-${LLVM_VERSION}/lib/libunwind.a \
+        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++.a \
+        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++experimental.a \
+        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++abi.a \
     toolchain/lib/
 
 ./patchelf --set-rpath '$ORIGIN' toolchain/lib/libc++.so.1
@@ -683,7 +683,7 @@ cp -r /usr/share/aclocal toolchain/share/
     cd /glibc-compatibility
     mkdir -p build
     cd build
-    /data/toolchain/bin/cmake -DCMAKE_C_COMPILER=/usr/lib/llvm-13/bin/clang -DCMAKE_CXX_COMPILER=/usr/lib/llvm-13/bin/clang++ ..
+    /data/toolchain/bin/cmake -DCMAKE_C_COMPILER=/usr/lib/llvm-${LLVM_VERSION}/bin/clang -DCMAKE_CXX_COMPILER=/usr/lib/llvm-${LLVM_VERSION}/bin/clang++ ..
     make
 ) &> /dev/null
 
