@@ -672,6 +672,7 @@ cp -r /tests toolchain/test
 mv toolchain/bin/python3 toolchain/bin/ldb-python3
 cp -r /usr/lib/python3.6 toolchain/lib/
 cp -r /usr/share/gdb toolchain/share/
+cp -r /usr/share/gcc toolchain/share/
 
 cp /usr/bin/gdb-add-index toolchain/bin/
 cp /usr/bin/google-pprof toolchain/bin/pprof
