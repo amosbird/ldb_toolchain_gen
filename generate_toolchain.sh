@@ -66,6 +66,7 @@ ln -sf lldb-13 toolchain/bin/lldb
 ln -sf clangd-13 toolchain/bin/clangd
 ln -sf clang-tidy-13 toolchain/bin/clang-tidy
 ln -sf gcc toolchain/bin/cc
+ln -sf g++ toolchain/bin/c++
 mv toolchain/bin/lldb-server-13 toolchain/bin/lldb-server-13.0.1
 
 # ln -sf gcc-ranlib-11 toolchain/bin/ranlib
