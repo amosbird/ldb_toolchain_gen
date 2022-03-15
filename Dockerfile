@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:18.04 AS generator
 
 ENV DEBIAN_FRONTEND=noninteractive LLVM_VERSION=14 LLVM_VERSION_FULL=14.0.0
 
@@ -30,9 +30,61 @@ RUN apt-get update \
         musl-tools \
         binutils-dev \
         libiberty-dev \
+        build-essential \
+        fakeroot \
+        dpkg-dev \
+        git \
+        libc++-${LLVM_VERSION}-dev libc++abi-${LLVM_VERSION}-dev \
+        flex \
+        autoconf \
+        clangd-${LLVM_VERSION} \
+        gdb \
+        google-perftools \
+        libssl-dev \
         --yes --no-install-recommends
 
-RUN apt install git --yes --no-install-recommends
+FROM generator AS glibc
+
+RUN apt-get install \
+        gettext \
+        file \
+        quilt \
+        gawk \
+        debhelper \
+        rdfind \
+        symlinks \
+        netbase \
+        gperf \
+        bison \
+        systemtap-sdt-dev \
+        libaudit-dev \
+        libcap-dev \
+        libselinux-dev \
+        g++-7-multilib \
+        po-debconf \
+        --yes --no-install-recommends
+
+WORKDIR /opt
+
+RUN wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/glibc/2.27-3ubuntu1.5/glibc_2.27-3ubuntu1.5.dsc
+
+RUN wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/glibc/2.27-3ubuntu1.5/glibc_2.27.orig.tar.xz
+
+RUN wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/glibc/2.27-3ubuntu1.5/glibc_2.27-3ubuntu1.5.debian.tar.xz
+
+RUN dpkg-source -x glibc_2.27-3ubuntu1.5.dsc
+
+WORKDIR /opt/glibc-2.27
+
+RUN sed -i "s/if (__glibc_unlikely (__access (preload_file, R_OK) == 0))/if (false)/" elf/rtld.c
+
+RUN DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -rfakeroot -b
+
+FROM generator
+
+COPY --from=glibc /opt/libc6_2.27-3ubuntu1.5_amd64.deb /opt/
+
+RUN dpkg -i /opt/libc6_2.27-3ubuntu1.5_amd64.deb
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-x86_64.tar.gz -O /opt/cmake-3.22.1-linux-x86_64.tar.gz
 
@@ -41,18 +93,6 @@ RUN wget https://github.com/NixOS/patchelf/releases/download/0.14.3/patchelf-0.1
 RUN pip3 install setuptools
 
 RUN pip3 install git+https://github.com/intoli/exodus@ef3d5e92c1b604b09cf0a57baff0f4d0b421b8da
-
-# Add extra binaries per project
-
-RUN apt update && apt install libc++-${LLVM_VERSION}-dev libc++abi-${LLVM_VERSION}-dev --yes --no-install-recommends
-
-RUN apt install flex --yes --no-install-recommends
-
-RUN apt install autoconf --yes --no-install-recommends
-
-RUN apt update && apt install clangd-${LLVM_VERSION} --yes --no-install-recommends
-
-RUN apt install gdb --yes --no-install-recommends
 
 RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.tar.gz && \
     cd /opt && \
@@ -63,10 +103,6 @@ RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.ta
     make install && \
     cd .. && \
     rm -rf bison-3.5.1 bison-3.5.1.tar.gz
-
-RUN apt install google-perftools --yes --no-install-recommends
-
-RUN apt install libssl-dev --yes --no-install-recommends
 
 RUN exodus /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/lldb-argdumper-${LLVM_VERSION} /usr/bin/lldb-instr-${LLVM_VERSION} /usr/bin/lldb-server-${LLVM_VERSION} /usr/bin/lldb-vscode-${LLVM_VERSION} /usr/bin/lldb-${LLVM_VERSION} /usr/bin/clangd-${LLVM_VERSION} /usr/bin/clang-tidy-${LLVM_VERSION} /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd /usr/bin/clang-cpp-${LLVM_VERSION} /usr/bin/x86_64-linux-gnu-cpp-11 /usr/bin/gcc-ranlib-11 /usr/bin/g++-11 /usr/bin/gcc-ar-11 /usr/bin/gcc-nm-11 /usr/bin/gcc-11 /usr/bin/llvm-objdump-${LLVM_VERSION} /usr/bin/llvm-objcopy-${LLVM_VERSION} /usr/bin/llvm-ranlib-${LLVM_VERSION} /usr/bin/llvm-ar-${LLVM_VERSION} /usr/bin/llvm-nm-${LLVM_VERSION} /usr/bin/clang-${LLVM_VERSION} /usr/bin/lld-${LLVM_VERSION} /usr/bin/ninja /usr/lib/gcc/x86_64-linux-gnu/11/lto1 /usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper /usr/lib/gcc/x86_64-linux-gnu/11/g++-mapper-server /usr/lib/gcc/x86_64-linux-gnu/11/cc1 /usr/lib/gcc/x86_64-linux-gnu/11/cc1plus /usr/lib/gcc/x86_64-linux-gnu/11/collect2 | bash
 
