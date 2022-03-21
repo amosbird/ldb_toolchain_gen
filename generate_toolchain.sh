@@ -64,6 +64,7 @@ ln -sf llvm-ranlib-13 toolchain/bin/ranlib
 ln -sf llvm-nm-13 toolchain/bin/nm
 ln -sf lldb-13 toolchain/bin/lldb
 ln -sf clangd-13 toolchain/bin/clangd
+ln -sf clang-format-13 toolchain/bin/clang-format
 ln -sf clang-tidy-13 toolchain/bin/clang-tidy
 ln -sf gcc toolchain/bin/cc
 ln -sf g++ toolchain/bin/c++
