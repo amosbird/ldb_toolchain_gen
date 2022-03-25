@@ -1,6 +1,6 @@
 FROM ubuntu:18.04 AS generator
 
-ENV DEBIAN_FRONTEND=noninteractive LLVM_VERSION=13 LLVM_VERSION_FULL=13.0.0
+ENV DEBIAN_FRONTEND=noninteractive LLVM_VERSION=13
 
 RUN apt-get update \
     && apt-get install ca-certificates lsb-release wget gnupg apt-transport-https software-properties-common \
@@ -122,6 +122,8 @@ RUN mkdir /tests
 COPY a.c /tests/
 
 ADD glibc-compatibility /glibc-compatibility
+
+ENV LLVM_VERSION_FULL=13.0.1
 
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${LLVM_VERSION_FULL}/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
 
