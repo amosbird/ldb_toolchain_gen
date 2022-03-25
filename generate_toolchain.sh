@@ -67,6 +67,7 @@ ln -sf clangd-${LLVM_VERSION} toolchain/bin/clangd
 ln -sf clang-tidy-${LLVM_VERSION} toolchain/bin/clang-tidy
 ln -sf clang-format-${LLVM_VERSION} toolchain/bin/clang-format
 ln -sf gcc toolchain/bin/cc
+ln -sf g++ toolchain/bin/c++
 mv toolchain/bin/lldb-server-${LLVM_VERSION} toolchain/bin/lldb-server-${LLVM_VERSION}.0.1
 
 # ln -sf gcc-ranlib-11 toolchain/bin/ranlib
@@ -187,6 +188,7 @@ cp -r --parents \
     /usr/include/syslog.h \
     /usr/include/termios.h \
     /usr/include/time.h \
+    /usr/include/uchar.h \
     /usr/include/ucontext.h \
     /usr/include/unistd.h \
     /usr/include/utime.h \
@@ -673,6 +675,9 @@ cp -r /tests toolchain/test
 mv toolchain/bin/python3 toolchain/bin/ldb-python3
 cp -r /usr/lib/python3.6 toolchain/lib/
 cp -r /usr/share/gdb toolchain/share/
+# printers for gcc
+cp -r /usr/share/gcc toolchain/share/gdb/
+# printers for clang
 mkdir -p toolchain/share/gdb/libcxx
 cp /opt/printers.py toolchain/share/gdb/libcxx/
 
