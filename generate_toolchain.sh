@@ -553,6 +553,9 @@ mv toolchain/bin/bison toolchain/bin/bison-3.5.1
 
 cp -r /wrappers/* toolchain/bin/
 
+sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clang
+sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clang++
+
 # Setup gcc toolchains
 
 mkdir -p toolchain/lib/gcc/x86_64-linux-gnu/11
