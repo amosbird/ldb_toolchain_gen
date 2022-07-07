@@ -149,6 +149,8 @@ w6  = -1.63092934096575273989e-03; /* 0xBF5AB89D, 0x0B9E43E4 */
 #include <stdint.h>
 #include <math.h>
 
+#include "libm.h"
+
 double lgamma_r(double x, int *signgamp)
 {
 	union {double f; uint64_t i;} u = {x};
@@ -260,4 +262,9 @@ double lgamma_r(double x, int *signgamp)
 	if (sign)
 		r = nadj - r;
 	return r;
+}
+
+double lgamma(double x)
+{
+	return lgamma_r(x, &__signgam);
 }
