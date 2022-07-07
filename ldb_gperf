@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 
 set -e
-# set -x
 
 LIBDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/../lib" &> /dev/null && pwd )
+loader=""
 
-loader=$LIBDIR/ld-linux-x86-64.so.2
+if [ "$(arch)" = "x86_64" ]; then
+    loader=$LIBDIR/ld-linux-x86-64.so.2
+elif [ "$(arch)" = "aarch64" ]; then
+    loader=$LIBDIR/ld-linux-aarch64.so.1
+else
+    echo "Unknown architecture: $(arch)"
+    exit 1
+fi
 
 if [ -z "$1" ]; then
     echo "Usage: $0 <program> <perf_file> [perf_signal]"

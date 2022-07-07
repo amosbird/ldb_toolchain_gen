@@ -1,7 +1,31 @@
 #include <stddef.h>
 
-#include <emmintrin.h>
+#include <arm_neon.h>
 
+typedef int64x2_t __m128i;
+
+#define vreinterpretq_m128i_s32(x) vreinterpretq_s64_s32(x)
+#define vreinterpretq_s32_m128i(x) vreinterpretq_s32_s64(x)
+
+static inline __attribute__((always_inline)) void _mm_storeu_si128(__m128i *p, __m128i a)
+{
+    vst1q_s32((int32_t *) p, vreinterpretq_s32_m128i(a));
+}
+
+static inline __attribute__((always_inline)) void _mm_store_si128(__m128i *p, __m128i a)
+{
+    vst1q_s32((int32_t *) p, vreinterpretq_s32_m128i(a));
+}
+
+static inline __attribute__((always_inline)) __m128i _mm_loadu_si128(const __m128i *p)
+{
+    return vreinterpretq_m128i_s32(vld1q_s32((const int32_t *) p));
+}
+
+static inline __attribute__((always_inline)) __m128i _mm_load_si128(const __m128i *p)
+{
+    return vreinterpretq_m128i_s32(vld1q_s32((const int32_t *) p));
+}
 
 /** Custom memcpy implementation for ClickHouse.
   * It has the following benefits over using glibc's implementation:
@@ -215,3 +239,7 @@ tail:
     return ret;
 }
 
+extern "C" void * memcpy(void * __restrict dst, const void * __restrict src, size_t size)
+{
+    return inline_memcpy(dst, src, size);
+}

@@ -35,15 +35,23 @@ sed '0,/^#EOF#$/d' "$0" | tar zx --strip-components=1 -C "$tmpdir"
 mv "$tmpdir" "$dir"
 
 cd "$dir"
-
+interpreter=""
+if [ "${ARCH}" == "x86_64" ]; then
+    interpreter="$dir/lib/ld-linux-x86-64.so.2"
+elif [ "${ARCH}" == "aarch64" ]; then
+    interpreter="$dir/lib/ld-linux-aarch64.so.1"
+else
+    echo "Unknown architecture: ${ARCH}"
+    exit 1
+fi
 for f in bin/*
 do
-    bin/patchelf --set-interpreter "$dir/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../lib' "$f" &> /dev/null || true
+    bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../lib' "$f" &> /dev/null || true
 done
 
 for f in cc1 cc1plus collect2 g++-mapper-server lto1 lto-wrapper
 do
-    bin/patchelf --set-interpreter "$dir/lib/ld-linux-x86-64.so.2" --set-rpath '$ORIGIN/../../..' "lib/gcc/x86_64-linux-gnu/11/$f" &> /dev/null || true
+    bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../..' "lib/gcc/${ARCH}-linux-gnu/11/$f" &> /dev/null || true
 done
 
 if ! bin/gcc test/a.c -o test/a; then

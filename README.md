@@ -73,6 +73,8 @@ In the end, `/tmp/some_toolchain_gen` will contain an install script: `ldb_toolc
 
 The main branch is used to build [ClickHouse](https://github.com/ClickHouse/ClickHouse). There are also different branches targeting specific projects. For instance, branch doris-ubuntu-18.04-x64 is mainly used for building [Doris](https://github.com/apache/incubator-doris).
 
+If you want to generate a toolchain for the arm platform, you can change `ARCH=x86_64` in the `Dockerfile` to `ARCH=aarch64`.
+
 ## How to avoid GLIBC incompatibility
 
 LDB toolchain might use newer libc which in turn will generate binaries that cannot be run on old host, even the same host for compilation. Users will encounter errors like `version GLIBC_2.27 not found`. A practical way of resolving this issue is described at http://www.lightofdawn.org/wiki/wiki.cgi/NewAppsOnOldGlibc .
