@@ -10,8 +10,8 @@ LDB toolchain generator gives you a working gcc-11 and clang-13 environment with
 
 2. Execute the following command to generate LDB toolchain
 
-``` sh
-sh ldb_toolchain_gen.sh /path/to/ldb_toolchain/
+``` bash
+bash ldb_toolchain_gen.sh /path/to/ldb_toolchain/
 ```
 
 `/path/to/ldb_toolchain/` is the directory where the toolchain is installed. The following directory structure will be created.
@@ -24,6 +24,11 @@ sh ldb_toolchain_gen.sh /path/to/ldb_toolchain/
 ├── test
 └── usr
 ```
+
+---
+
+> **Note**
+> The following content describes how `ldb_toolchain_gen.sh` is made. There is no need for common users to pay attention. It might lead to unnecessary confusion.
 
 ## Introduction
 
