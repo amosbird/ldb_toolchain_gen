@@ -1,6 +1,6 @@
 # Linux Distribution Based Toolchain Generator
 
-## TDLR
+## TLDR.
 
 LDB toolchain generator gives you a working gcc-11 and clang-13 environment with cmake 3.22. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
 
