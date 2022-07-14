@@ -179,14 +179,14 @@ echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./glibc-compatibility.o ./libpthread.a ../../lib/libc.so.6 ./libc_nonshared.a  AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
+GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a  AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
 " >toolchain/usr/lib/libc.so
 elif [ "${ARCH}" = "aarch64" ]; then
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./glibc-compatibility.o ./libpthread.a ../../lib/libc.so.6 ./libc_nonshared.a  AS_NEEDED ( ../../lib/ld-linux-aarch64.so.1 ) )
+GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a  AS_NEEDED ( ../../lib/ld-linux-aarch64.so.1 ) )
 " >toolchain/usr/lib/libc.so
 else
     echo "Unknown architecture: ${ARCH}"
@@ -206,7 +206,7 @@ echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./glibc-compatibility.o ./libpthread.a ../../lib/libm.so.6 )
+GROUP ( ./libglibc-compatibility.a ../../lib/libm.so.6 )
 " >toolchain/usr/lib/libm.so
 
 ln -s ../../lib/libresolv.so.2 toolchain/usr/lib/libresolv.so
@@ -241,7 +241,7 @@ if [ "${ARCH}" = "x86_64" ]; then
     echo "/* GNU ld script
 */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./glibc-compatibility.o ./libpthread.a ./libm-2.27.a ./libmvec.a )
+GROUP ( ./libglibc-compatibility.a ./libm-2.27.a ./libmvec.a )
 " >toolchain/usr/lib/libm.a
 cp -L /usr/lib/${ARCH}-linux-gnu/libm-2.27.a toolchain/usr/lib/
 cp -L /usr/lib/${ARCH}-linux-gnu/libmvec.a toolchain/usr/lib/
@@ -249,7 +249,7 @@ elif [ "${ARCH}" = "aarch64" ]; then
     echo "/* GNU ld script
 */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./glibc-compatibility.o ./libpthread.a ./libm-2.27.a )
+GROUP ( ./libglibc-compatibility.a ./libm-2.27.a )
 " >toolchain/usr/lib/libm.a
 cp -L /usr/lib/${ARCH}-linux-gnu/libm.a toolchain/usr/lib/libm-2.27.a
 else
@@ -412,7 +412,7 @@ cp -r /usr/share/aclocal toolchain/share/
     make
     /data/toolchain/bin/ar x libglibc-compatibility.a
     /data/toolchain/bin/ld -relocatable ./*.o -o glibc-compatibility.o
-)
+) &> /dev/null
 
 cp /glibc-compatibility/build/libglibc-compatibility.a /glibc-compatibility/build/glibc-compatibility.o toolchain/usr/lib/
 

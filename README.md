@@ -25,6 +25,12 @@ bash ldb_toolchain_gen.sh /path/to/ldb_toolchain/
 └── usr
 ```
 
+## FAQ
+
+1. Why do I still see version `GLIBC_xxx' not found?
+
+It might be related to extern libc weak symbol such as https://github.com/janbar/openssl-cmake/blob/d4634362820f874e1f1461c7f5d766b3ef968c67/crypto/rand/rand_unix.c#L373 . The root cause is related to [how the linker processes symbols](https://maskray.me/blog/2021-06-20-linker-symbol-resolution). The ideal solution is removing weak attribute from libc symbol declarations.
+
 ---
 
 > **Note**
