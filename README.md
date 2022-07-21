@@ -1,6 +1,6 @@
 # Linux Distribution Based Toolchain Generator
 
-## TLDR.
+## TLDR
 
 LDB toolchain generator gives you a working gcc-11 and clang-13 environment with cmake 3.22. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
 
@@ -29,7 +29,11 @@ bash ldb_toolchain_gen.sh /path/to/ldb_toolchain/
 
 1. Why do I still see version `GLIBC_xxx' not found?
 
-It might be related to extern libc weak symbol such as https://github.com/janbar/openssl-cmake/blob/d4634362820f874e1f1461c7f5d766b3ef968c67/crypto/rand/rand_unix.c#L373 . The root cause is related to [how the linker processes symbols](https://maskray.me/blog/2021-06-20-linker-symbol-resolution). The ideal solution is removing weak attribute from libc symbol declarations.
+It might be related to extern libc weak symbol such as [this code](https://github.com/janbar/openssl-cmake/blob/d4634362820f874e1f1461c7f5d766b3ef968c67/crypto/rand/rand_unix.c#L373). The root cause is related to [how the linker processes symbols](https://maskray.me/blog/2021-06-20-linker-symbol-resolution). The ideal solution is removing weak attribute from libc symbol declarations.
+
+2. Compiler/Linker doesn't work at all: Symbol not found in xxx.so?
+
+Make sure `LD_LIBRARY_PATH` is not set.
 
 ---
 
@@ -38,7 +42,7 @@ It might be related to extern libc weak symbol such as https://github.com/janbar
 
 ## Introduction
 
-LDB toolchain generator help generate toolchains derived from well-known linux distributions (LDB toolchain). LDB toolchain contains binaries from well-known linux distributions, which are heavily tested and optimized. It avoids the docker dependency which usually complicate the developing workflow. Projects adopting LDB toolchain will likely generate byte-identical binaries. It benefits testing and debugging due to 100% consistency. It also lowers the bar of contributing code, as large C/C++ projects are usually daunting to build compared to Java, Golang, Rust, etc.
+**LDB toolchain generator** helps generate toolchains derived from well-known linux distributions (LDB toolchain). **LDB toolchain** contains binaries from well-known linux distributions, which are heavily tested and optimized. It avoids the docker dependency which usually complicates developing workflows. Projects adopting LDB toolchain will likely generate byte-identical binaries. It benefits testing and debugging due to 100% consistency. It also lowers the bar of contributing code, as large C/C++ projects are usually daunting to build compared to Java, Golang, Rust, etc.
 
 There are projects like Crosstool-NG and Gentoo-Prefix which aim at bootstraping toolchains from scratch. They are for advanced use cases and take a tremendous amount of time to bootstrap. It's also hard to control the quality of self-compiled toolchains.
 
@@ -51,7 +55,7 @@ There are projects like Crosstool-NG and Gentoo-Prefix which aim at bootstraping
 
 ## How to generate a LDB toolchain generator
 
-The main branch illustrate how the generator assembles gcc-11 and clang-13 from ubuntu-18.04.
+The main branch illustrates how the generator assembles gcc-11 and clang-14 from ubuntu-18.04.
 
 To actually generate the toolchain, the following steps can be used:
 
@@ -80,12 +84,12 @@ mkdir /tmp/some_toolchain_gen
 docker run --rm -v /tmp/some_toolchain_gen:/data amosbird/some_toolchain_gen
 ```
 
-In the end, `/tmp/some_toolchain_gen` will contain an install script: `ldb_toolchain_gen.sh`.
+In the end, `/tmp/some_toolchain_gen` will contain a install script: `ldb_toolchain_gen.sh`.
 
-The main branch is used to build [ClickHouse](https://github.com/ClickHouse/ClickHouse). There are also different branches targeting specific projects. For instance, branch doris-ubuntu-18.04-x64 is mainly used for building [Doris](https://github.com/apache/incubator-doris).
+The main branch is currently used to build [ClickHouse](https://github.com/ClickHouse/ClickHouse) and [Doris](https://github.com/apache/incubator-doris).
 
 If you want to generate a toolchain for the arm platform, you can change `ARCH=x86_64` in the `Dockerfile` to `ARCH=aarch64`.
 
 ## How to avoid GLIBC incompatibility
 
-LDB toolchain might use newer libc which in turn will generate binaries that cannot be run on old host, even the same host for compilation. Users will encounter errors like `version GLIBC_2.27 not found`. A practical way of resolving this issue is described at http://www.lightofdawn.org/wiki/wiki.cgi/NewAppsOnOldGlibc .
+LDB toolchain might use newer libc which in turn will generate binaries that cannot be run on old host, even the same host for compilation. Users will encounter errors like `version GLIBC_2.27 not found`. A practical way of resolving this issue is described in [this wiki](http://www.lightofdawn.org/wiki/wiki.cgi/NewAppsOnOldGlibc).
