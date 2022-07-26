@@ -23,6 +23,8 @@ cp -L \
       /lib/${ARCH}-linux-gnu/libnss_files.so.2 \
       /lib/${ARCH}-linux-gnu/libnss_hesiod.so.2 \
       /lib/${ARCH}-linux-gnu/libnss_nis.so.2 \
+      /lib/${ARCH}-linux-gnu/libtinfo.so.5 \
+      /lib/${ARCH}-linux-gnu/libncursesw.so.5 \
     toolchain/lib/
 
 # Provide gperf CPU profiler

@@ -4,6 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export PATH="$DIR":$PATH
 export LD_PRELOAD=
+export LD_LIBRARY_PATH=$DIR/../lib
 
 http_endpoint=$1 # required
 query_id=$2      # required
