@@ -33,6 +33,7 @@ trap "rm -rf -- '$tmpdir'" EXIT
 sed '0,/^#EOF#$/d' "$0" | tar zx --strip-components=1 -C "$tmpdir"
 
 mv "$tmpdir" "$dir"
+chmod a+rx "$dir"
 
 cd "$dir"
 interpreter=""
