@@ -105,7 +105,7 @@ RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.ta
     cd .. && \
     rm -rf bison-3.5.1 bison-3.5.1.tar.gz
 
-RUN exodus /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/llvm-strip-${LLVM_VERSION} /usr/bin/llvm-install-name-tool-${LLVM_VERSION} /usr/bin/lldb-argdumper-${LLVM_VERSION} /usr/bin/lldb-instr-${LLVM_VERSION} /usr/bin/lldb-server-${LLVM_VERSION} /usr/bin/lldb-vscode-${LLVM_VERSION} /usr/bin/lldb-${LLVM_VERSION} /usr/bin/clangd-${LLVM_VERSION} /usr/bin/clang-tidy-${LLVM_VERSION} /usr/bin/clang-format-${LLVM_VERSION} /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd /usr/bin/clang-cpp-${LLVM_VERSION} /usr/bin/${ARCH}-linux-gnu-cpp-11 /usr/bin/gcc-ranlib-11 /usr/bin/g++-11 /usr/bin/gcc-ar-11 /usr/bin/gcc-nm-11 /usr/bin/gcc-11 /usr/bin/llvm-objdump-${LLVM_VERSION} /usr/bin/llvm-objcopy-${LLVM_VERSION} /usr/bin/llvm-ranlib-${LLVM_VERSION} /usr/bin/llvm-ar-${LLVM_VERSION} /usr/bin/llvm-nm-${LLVM_VERSION} /usr/bin/clang-${LLVM_VERSION} /usr/bin/lld-${LLVM_VERSION} /usr/bin/ninja /usr/lib/gcc/${ARCH}-linux-gnu/11/lto1 /usr/lib/gcc/${ARCH}-linux-gnu/11/lto-wrapper /usr/lib/gcc/${ARCH}-linux-gnu/11/g++-mapper-server /usr/lib/gcc/${ARCH}-linux-gnu/11/cc1 /usr/lib/gcc/${ARCH}-linux-gnu/11/cc1plus /usr/lib/gcc/${ARCH}-linux-gnu/11/collect2 | bash
+RUN exodus /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/llvm-strip-${LLVM_VERSION} /usr/bin/llvm-install-name-tool-${LLVM_VERSION} /usr/bin/lldb-argdumper-${LLVM_VERSION} /usr/bin/lldb-instr-${LLVM_VERSION} /usr/bin/lldb-server-${LLVM_VERSION} /usr/bin/lldb-vscode-${LLVM_VERSION} /usr/bin/lldb-${LLVM_VERSION} /usr/bin/clangd-${LLVM_VERSION} /usr/bin/clang-tidy-${LLVM_VERSION} /usr/bin/clang-format-${LLVM_VERSION} /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd /usr/bin/clang-cpp-${LLVM_VERSION} /usr/bin/${ARCH}-linux-gnu-cpp-10 /usr/bin/gcc-ranlib-10 /usr/bin/g++-10 /usr/bin/gcc-ar-10 /usr/bin/gcc-nm-10 /usr/bin/gcc-10 /usr/bin/llvm-objdump-${LLVM_VERSION} /usr/bin/llvm-objcopy-${LLVM_VERSION} /usr/bin/llvm-ranlib-${LLVM_VERSION} /usr/bin/llvm-ar-${LLVM_VERSION} /usr/bin/llvm-nm-${LLVM_VERSION} /usr/bin/clang-${LLVM_VERSION} /usr/bin/lld-${LLVM_VERSION} /usr/bin/ninja /usr/lib/gcc/${ARCH}-linux-gnu/10/lto1 /usr/lib/gcc/${ARCH}-linux-gnu/10/lto-wrapper /usr/lib/gcc/${ARCH}-linux-gnu/10/cc1 /usr/lib/gcc/${ARCH}-linux-gnu/10/cc1plus /usr/lib/gcc/${ARCH}-linux-gnu/10/collect2 | bash
 
 RUN cp /usr/lib/libsource-highlight.so.4 /opt/exodus/bundles/*/usr/lib/${ARCH}-linux-gnu/
 
@@ -113,7 +113,7 @@ COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
 RUN mkdir /wrappers
 
-COPY tfg.py flamegraph bison ldb_gperf gcc g++ clang clang++ /wrappers/
+COPY tfg.py flamegraph bison ldb_gperf gcc g++ clang clang++ curl /wrappers/
 
 ADD tfg /wrappers/tfg
 

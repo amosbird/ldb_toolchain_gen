@@ -89,7 +89,8 @@ ln -sf llvm-objdump-${LLVM_VERSION} toolchain/bin/objdump
 ln -sf clang-cpp-${LLVM_VERSION} toolchain/bin/cpp
 ln -sf llvm-ar-${LLVM_VERSION} toolchain/bin/ar
 ln -sf llvm-ranlib-${LLVM_VERSION} toolchain/bin/ranlib
-ln -sf llvm-nm-${LLVM_VERSION} toolchain/bin/nm
+# llvm-nm somehow doesn't work when compiling hyperscan's fat runtime
+# ln -sf llvm-nm-${LLVM_VERSION} toolchain/bin/nm
 ln -sf lldb-${LLVM_VERSION} toolchain/bin/lldb
 ln -sf clangd-${LLVM_VERSION} toolchain/bin/clangd
 ln -sf clang-tidy-${LLVM_VERSION} toolchain/bin/clang-tidy
@@ -261,6 +262,9 @@ fi
 
 # We provide bison wrapper to make sure it picks up our m4 and pkg data
 mv toolchain/bin/bison toolchain/bin/bison-3.5.1
+
+# We provide curl wrapper to make sure curl can load runtime DSO from our lib
+mv toolchain/bin/curl toolchain/bin/ldb-curl
 
 cp -r /wrappers/* toolchain/bin/
 

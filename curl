@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+export PATH="$DIR":$PATH
+export LD_PRELOAD=
+export LD_LIBRARY_PATH=$DIR/../lib
+
+exec "$DIR/ldb-curl" "$@"
