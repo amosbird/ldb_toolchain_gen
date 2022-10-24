@@ -230,6 +230,9 @@ if [ "${ARCH}" = "x86_64" ]; then
     cp -L /usr/lib/${ARCH}-linux-gnu/rcrt1.o toolchain/usr/lib/
 fi
 
+# rust build requires this
+cp -L /usr/lib/${ARCH}-linux-gnu/libutil.so toolchain/usr/lib/
+cp -L /usr/lib/${ARCH}-linux-gnu/libutil.a toolchain/usr/lib/
 
 # static build
 cp -L /usr/lib/${ARCH}-linux-gnu/libc.a toolchain/usr/lib/
