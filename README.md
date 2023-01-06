@@ -55,7 +55,7 @@ There are projects like Crosstool-NG and Gentoo-Prefix which aim at bootstraping
 
 ## How to generate a LDB toolchain generator
 
-The main branch illustrates how the generator assembles gcc-11 and clang-14 from ubuntu-18.04.
+The main branch illustrates how the generator assembles gcc-11 and clang-15 from ubuntu-18.04.
 
 To actually generate the toolchain, the following steps can be used:
 
