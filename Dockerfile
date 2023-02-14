@@ -137,6 +137,18 @@ RUN exodus /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bi
 
 RUN cp /usr/lib/libsource-highlight.so.4 /opt/exodus/bundles/*/usr/lib/${ARCH}-linux-gnu/
 
+RUN wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz -O /opt/boost_1_81_0.tar.gz && \
+    cd /opt && \
+    tar zxf boost_1_81_0.tar.gz && \
+    cd boost_1_81_0 && \
+    ./bootstrap.sh --prefix=/opt/boost --without-libraries=python --with-toolset=gcc && \
+    ./b2 toolset=gcc && \
+    ./b2 install && \
+    cd .. && \
+    rm -rf boost_1_81_0 boost_1_81_0.tar.gz
+
+RUN apt-get install rsync --yes --no-install-recommends
+
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
 RUN mkdir /wrappers

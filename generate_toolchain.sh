@@ -27,6 +27,8 @@ cp -L \
       /lib/${ARCH}-linux-gnu/libncursesw.so.5 \
     toolchain/lib/
 
+rsync -aHS /opt/boost/ toolchain/usr/
+
 # Provide gperf CPU profiler
 cp -L /usr/lib/${ARCH}-linux-gnu/libprofiler.so.0.4.8 toolchain/lib/libprofiler.so
 if [ "${ARCH}" = "x86_64" ]; then
