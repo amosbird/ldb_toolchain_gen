@@ -1,6 +1,6 @@
 FROM ubuntu:18.04 AS generator
 
-ENV DEBIAN_FRONTEND=noninteractive LLVM_VERSION=15 LLVM_VERSION_FULL=15.0.1 ARCH=x86_64
+ENV DEBIAN_FRONTEND=noninteractive LLVM_VERSION=15 LLVM_VERSION_FULL=15.0.7 ARCH=x86_64
 
 RUN apt-get update \
     && apt-get install ca-certificates lsb-release wget gnupg apt-transport-https software-properties-common \
@@ -57,6 +57,7 @@ RUN apt-get update \
         libcap-dev \
         libselinux-dev \
         po-debconf \
+        yasm \
         --yes --no-install-recommends
 
 RUN if [ "${ARCH}" = "x86_64" ] ; then apt-get install g++-7-multilib --yes --no-install-recommends; fi
@@ -105,7 +106,7 @@ RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.ta
     cd .. && \
     rm -rf bison-3.5.1 bison-3.5.1.tar.gz
 
-RUN exodus /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/ninja \
+RUN exodus /usr/bin/yasm /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/ninja \
     /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd \
     /usr/bin/gcc-ranlib-11 /usr/bin/g++-11 /usr/bin/gcc-ar-11 /usr/bin/gcc-nm-11 /usr/bin/gcc-11 \
     /usr/bin/${ARCH}-linux-gnu-cpp-11 \
