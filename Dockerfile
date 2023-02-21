@@ -1,6 +1,6 @@
 FROM ubuntu:18.04 AS generator
 
-ENV DEBIAN_FRONTEND=noninteractive LLVM_VERSION=15 LLVM_VERSION_FULL=15.0.7 ARCH=x86_64
+ENV DEBIAN_FRONTEND=noninteractive GCC_VERSION=11 LLVM_VERSION=15 LLVM_VERSION_FULL=15.0.7 ARCH=x86_64
 
 RUN apt-get update \
     && apt-get install ca-certificates lsb-release wget gnupg apt-transport-https software-properties-common \
@@ -25,7 +25,7 @@ RUN apt-get update \
         lldb-${LLVM_VERSION} \
         libc++-${LLVM_VERSION}-dev libc++abi-${LLVM_VERSION}-dev \
         clangd-${LLVM_VERSION} \
-        g++-11 \
+        g++-${GCC_VERSION} \
         ninja-build \
         pkg-config \
         tzdata \
@@ -108,13 +108,15 @@ RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.ta
 
 RUN exodus /usr/bin/yasm /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/ninja \
     /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd \
-    /usr/bin/gcc-ranlib-11 /usr/bin/g++-11 /usr/bin/gcc-ar-11 /usr/bin/gcc-nm-11 /usr/bin/gcc-11 \
-    /usr/bin/${ARCH}-linux-gnu-cpp-11 \
-    /usr/lib/gcc/${ARCH}-linux-gnu/11/lto1 \
-    /usr/lib/gcc/${ARCH}-linux-gnu/11/lto-wrapper \
-    /usr/lib/gcc/${ARCH}-linux-gnu/11/cc1 \
-    /usr/lib/gcc/${ARCH}-linux-gnu/11/cc1plus \
-    /usr/lib/gcc/${ARCH}-linux-gnu/11/collect2 \
+    /usr/bin/gcc-ranlib-${GCC_VERSION} /usr/bin/g++-${GCC_VERSION} /usr/bin/gcc-ar-${GCC_VERSION} \
+    /usr/bin/gcc-nm-${GCC_VERSION} \
+    /usr/bin/gcc-${GCC_VERSION} \
+    /usr/bin/${ARCH}-linux-gnu-cpp-${GCC_VERSION} \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/lto1 \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/lto-wrapper \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/cc1 \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/cc1plus \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/collect2 \
     /usr/bin/lldb-argdumper-${LLVM_VERSION} \
     /usr/bin/lldb-instr-${LLVM_VERSION} \
     /usr/bin/lldb-server-${LLVM_VERSION} \
