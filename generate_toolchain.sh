@@ -364,16 +364,17 @@ mkdir -p toolchain/include/c++
 cp -r /usr/include/${ARCH}-linux-gnu/c++/11 toolchain/include/${ARCH}-linux-gnu/c++/
 cp -r /usr/include/c++/11 toolchain/include/c++/
 
-# Setup clang toolchains
+# Setup clang resource includes
 
 mkdir -p toolchain/lib/clang
+cp -r -L /usr/lib/llvm-15/lib/clang/${LLVM_VERSION_FULL} toolchain/lib/clang/
 
-cp -r -L /usr/lib/clang/${LLVM_VERSION} toolchain/lib/clang/${LLVM_VERSION_FULL}
+# cp -r -L /usr/lib/clang/${LLVM_VERSION_FULL} toolchain/lib/clang/${LLVM_VERSION_FULL}
 
-for so in toolchain/lib/clang/${LLVM_VERSION_FULL}/lib/linux/*.so
-do
-    ./patchelf --set-rpath '$ORIGIN/../../../..' "$so"
-done
+# for so in toolchain/lib/clang/${LLVM_VERSION_FULL}/lib/linux/*.so
+# do
+#     ./patchelf --set-rpath '$ORIGIN/../../../..' "$so"
+# done
 
 # libc++
 
