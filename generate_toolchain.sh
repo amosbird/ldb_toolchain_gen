@@ -367,7 +367,7 @@ cp -r /usr/include/c++/11 toolchain/include/c++/
 # Setup clang resource includes
 
 mkdir -p toolchain/lib/clang
-cp -r -L /usr/lib/llvm-15/lib/clang/${LLVM_VERSION_FULL} toolchain/lib/clang/
+cp -r -L /usr/lib/llvm-${LLVM_VERSION}/lib/clang/${LLVM_VERSION_FULL} toolchain/lib/clang/
 
 # cp -r -L /usr/lib/clang/${LLVM_VERSION_FULL} toolchain/lib/clang/${LLVM_VERSION_FULL}
 
@@ -420,7 +420,7 @@ cp -r /usr/share/aclocal toolchain/share/
     cd /glibc-compatibility
     mkdir -p build
     cd build
-    /data/toolchain/bin/cmake -DCMAKE_C_COMPILER=/usr/lib/llvm-${LLVM_VERSION}/bin/clang -DCMAKE_CXX_COMPILER=/usr/lib/llvm-${LLVM_VERSION}/bin/clang++ ..
+    /data/toolchain/bin/cmake ..
     make
     /data/toolchain/bin/ar x libglibc-compatibility.a
     /data/toolchain/bin/ld -relocatable ./*.o -o glibc-compatibility.o
