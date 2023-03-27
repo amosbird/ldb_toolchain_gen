@@ -27,8 +27,6 @@ cp -L \
       /lib/${ARCH}-linux-gnu/libncursesw.so.5 \
     toolchain/lib/
 
-rsync -aHS /opt/boost/ toolchain/usr/
-
 # Provide gperf CPU profiler
 cp -L /usr/lib/${ARCH}-linux-gnu/libprofiler.so.0.4.8 toolchain/lib/libprofiler.so
 if [ "${ARCH}" = "x86_64" ]; then
@@ -323,6 +321,8 @@ cp -r -L \
     /usr/lib/gcc/${ARCH}-linux-gnu/11/libgomp.spec \
     toolchain/lib/gcc/${ARCH}-linux-gnu/11
 
+ln -s gcc/x86_64-linux-gnu/11/libgomp.so toolchain/lib/libgomp.so.1
+
 if [ "${ARCH}" = "x86_64" ]; then
     cp -r -L \
     /usr/lib/gcc/x86_64-linux-gnu/11/crtoffloadbegin.o \
@@ -348,14 +348,14 @@ GROUP ( ./libstdc++.a ./libstdc++fs.a )
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
-GROUP ( ../../../libgcc_s.so.1 -lgcc )
+GROUP ( -lgcc -lgcc_eh )
 " >toolchain/lib/gcc/${ARCH}-linux-gnu/11/libgcc_s.so
 
 # Sometimes static linking might still link to libgcc_s. Use ld script to redirect.
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
-GROUP ( -lgcc )
+GROUP ( -lgcc -lgcc_eh )
 " >toolchain/lib/gcc/${ARCH}-linux-gnu/11/libgcc_s.a
 
 mkdir -p toolchain/include/${ARCH}-linux-gnu/c++

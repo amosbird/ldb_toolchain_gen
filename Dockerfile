@@ -30,6 +30,7 @@ RUN apt-get update \
         pkg-config \
         tzdata \
         python3-pip \
+        python-dev \
         musl-tools \
         binutils-dev \
         libiberty-dev \
@@ -58,6 +59,9 @@ RUN apt-get update \
         libselinux-dev \
         po-debconf \
         yasm \
+        rsync \
+        libltdl7 \
+        vim \
         --yes --no-install-recommends
 
 RUN if [ "${ARCH}" = "x86_64" ] ; then apt-get install g++-7-multilib --yes --no-install-recommends; fi
@@ -136,21 +140,7 @@ RUN exodus /usr/bin/yasm /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bi
     /usr/bin/llvm-profgen-${LLVM_VERSION} \
     /usr/bin/lld-${LLVM_VERSION} | bash
 
-RUN cp /usr/lib/libsource-highlight.so.4 /opt/exodus/bundles/*/usr/lib/${ARCH}-linux-gnu/
-
-RUN wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz -O /opt/boost_1_81_0.tar.gz && \
-    cd /opt && \
-    tar zxf boost_1_81_0.tar.gz && \
-    cd boost_1_81_0 && \
-    ./bootstrap.sh --prefix=/opt/boost --without-libraries=python --with-toolset=gcc && \
-    ./b2 toolset=gcc && \
-    ./b2 install && \
-    cd .. && \
-    rm -rf boost_1_81_0 boost_1_81_0.tar.gz
-
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-15.0.7/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
-
-RUN apt-get install rsync --yes --no-install-recommends
 
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
