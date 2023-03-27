@@ -5,4 +5,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export PATH="$DIR":$PATH
 export LD_PRELOAD=
 
-exec "$DIR/clang++-<LLVM_VERSION>" --sysroot "$DIR/.." "$@"
+exec "$DIR/clang++-<LLVM_VERSION>" <OLD_ABI> --sysroot "$DIR/.." "$@"

@@ -2,8 +2,38 @@
 
 set -e
 
+verbose=false
+old_abi=false
+
+help_message="Usage: $0 [OPTIONS] <toolchain_dir>
+Options:
+  -h, --help     Display this help message and exit.
+  -v, --verbose  Enable verbose mode.
+  -o, --old-abi  Use old ABI (Application Binary Interface)."
+
+while getopts ":hvo" opt; do
+  case $opt in
+    h)
+      echo "$help_message"
+      exit 0
+      ;;
+    v)
+      verbose=true
+      ;;
+    o)
+      old_abi=true
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND -1))
+
 if [ -z "$1" ]; then
-    echo "Usage: $0 <toolchain_dir>"
+    echo "$help_message"
     exit 1
 fi
 
@@ -53,6 +83,15 @@ done
 for f in cc1 cc1plus collect2 g++-mapper-server lto1 lto-wrapper
 do
     bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../..' "lib/gcc/${ARCH}-linux-gnu/11/$f" &> /dev/null || true
+done
+
+for c in clang clang++ gcc g++
+do
+    if $old_abi; then
+        sed -i "s/<OLD_ABI>/-no-pie -D_GLIBCXX_USE_CXX11_ABI=0/" bin/$c
+    else
+        sed -i "s/<OLD_ABI>//" bin/$c
+    fi
 done
 
 if ! bin/gcc test/a.c -o test/a; then

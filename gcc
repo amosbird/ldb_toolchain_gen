@@ -5,4 +5,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export PATH="$DIR":$PATH
 export LD_PRELOAD=
 
-exec "$DIR/gcc-11" --sysroot "$DIR/.." "$@"
+exec "$DIR/gcc-11" <OLD_ABI> --sysroot "$DIR/.." "$@"
