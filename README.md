@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-LDB toolchain generator gives you a working gcc-11 and clang-15 environment with cmake 3.22. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
+LDB toolchain generator gives you a working gcc-11 and clang-16 environment with cmake 3.22. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
 
 ## How to install
 
@@ -64,9 +64,9 @@ git clone https://github.com/amosbird/ldb_toolchain_gen
 
 cd ldb_toolchain_gen
 
-docker build . -t <your_toolchain_generator_tag>
+docker build . -t <your_toolchain_generator_tag> --network host
 
-docker run --rm -v </path/to/store/toolchain>:/data
+docker run --rm -v </path/to/store/toolchain>:/data <your_toolchain_generator_tag>
 
 # Concrete Example
 
@@ -86,7 +86,7 @@ docker run --rm -v /tmp/some_toolchain_gen:/data amosbird/some_toolchain_gen
 
 In the end, `/tmp/some_toolchain_gen` will contain a install script: `ldb_toolchain_gen.sh`.
 
-The main branch is currently used to build [ClickHouse](https://github.com/ClickHouse/ClickHouse) and [Doris](https://github.com/apache/incubator-doris).
+The main branch is currently used to build [ClickHouse](https://github.com/ClickHouse/ClickHouse) and [Doris](https://github.com/apache/doris).
 
 If you want to generate a toolchain for the arm platform, you can change `ARCH=x86_64` in the `Dockerfile` to `ARCH=aarch64`.
 
