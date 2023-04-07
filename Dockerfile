@@ -25,6 +25,7 @@ RUN apt-get update \
         lldb-${LLVM_VERSION} \
         libc++-${LLVM_VERSION}-dev libc++abi-${LLVM_VERSION}-dev \
         clangd-${LLVM_VERSION} \
+        libclang-rt-${LLVM_VERSION}-dev \
         g++-${GCC_VERSION} \
         ninja-build \
         pkg-config \
