@@ -1,6 +1,6 @@
 FROM ubuntu:18.04 AS generator
 
-ENV DEBIAN_FRONTEND=noninteractive GCC_VERSION=11 LLVM_VERSION=16 LLVM_VERSION_FULL=16 ARCH=x86_64
+ENV DEBIAN_FRONTEND=noninteractive GCC_VERSION=11 LLVM_VERSION=16 LLVM_VERSION_FULL=16.0.1 ARCH=x86_64
 
 RUN apt-get update \
     && apt-get install ca-certificates lsb-release wget gnupg apt-transport-https software-properties-common \

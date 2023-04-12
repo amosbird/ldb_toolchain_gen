@@ -367,7 +367,7 @@ cp -r /usr/include/c++/11 toolchain/include/c++/
 # Setup clang resource includes
 
 mkdir -p toolchain/lib/clang
-cp -r -L /usr/lib/llvm-${LLVM_VERSION}/lib/clang/${LLVM_VERSION_FULL} toolchain/lib/clang/
+cp -r -L /usr/lib/llvm-${LLVM_VERSION}/lib/clang/${LLVM_VERSION} toolchain/lib/clang/
 
 # cp -r -L /usr/lib/clang/${LLVM_VERSION_FULL} toolchain/lib/clang/${LLVM_VERSION_FULL}
 
