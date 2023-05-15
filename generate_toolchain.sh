@@ -15,6 +15,8 @@ cp -r -L /opt/exodus/bundles/*/lib/${ARCH}-linux-gnu/* toolchain/lib/
 
 cp -r -L /opt/exodus/bundles/*/usr/lib/${ARCH}-linux-gnu/* toolchain/lib/
 
+cp -r -L /opt/exodus/bundles/*/usr/lib/*.so* toolchain/lib/
+
 cp -L \
       /lib/${ARCH}-linux-gnu/libresolv.so.2 \
       /lib/${ARCH}-linux-gnu/libnss_nisplus.so.2 \
