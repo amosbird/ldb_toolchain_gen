@@ -44,7 +44,6 @@ RUN apt-get update \
         libselinux-dev \
         po-debconf \
         yasm \
-        nasm \
         rsync \
         libltdl7 \
         vim \
@@ -93,6 +92,16 @@ RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.ta
     make install && \
     cd .. && \
     rm -rf bison-3.5.1 bison-3.5.1.tar.gz
+
+RUN wget https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/nasm-2.16.01.tar.gz -O /opt/nasm-2.16.01.tar.gz && \
+    cd /opt && \
+    tar zxf nasm-2.16.01.tar.gz && \
+    cd nasm-2.16.01 && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf nasm-2.16.01.tar.gz nasm-2.16.01
 
 ENV LLVM_VERSION=16
 
