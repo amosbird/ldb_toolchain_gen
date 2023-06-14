@@ -1,6 +1,6 @@
 FROM ubuntu:18.04 AS generator
 
-ENV DEBIAN_FRONTEND=noninteractive GCC_VERSION=11 LLVM_VERSION=16 LLVM_VERSION_FULL=16.0.1 ARCH=x86_64
+ENV DEBIAN_FRONTEND=noninteractive GCC_VERSION=11 LLVM_VERSION=16 LLVM_VERSION_FULL=16.0.5 ARCH=x86_64
 
 RUN apt-get update \
     && apt-get install ca-certificates lsb-release wget gnupg apt-transport-https software-properties-common \
@@ -141,7 +141,7 @@ RUN exodus /usr/bin/yasm /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bi
     /usr/bin/llvm-profgen-${LLVM_VERSION} \
     /usr/bin/lld-${LLVM_VERSION} | bash
 
-RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-15.0.7/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
+RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${LLVM_VERSION_FULL}/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
 
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
