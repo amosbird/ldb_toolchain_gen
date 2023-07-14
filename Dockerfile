@@ -166,7 +166,7 @@ RUN mkdir /tests
 
 COPY a.c /tests/
 
-COPY libstdc++.a /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.a
+COPY libstdc++.a /usr/lib/gcc/${ARCH}-linux-gnu/11/libstdc++.a
 
 ADD glibc-compatibility /glibc-compatibility
 
