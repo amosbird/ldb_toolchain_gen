@@ -50,7 +50,7 @@ for lib in toolchain/lib/*; do
     fi
 done
 
-for f in /opt/exodus/bundles/*/usr/bin/*-x; do
+for f in /opt/exodus/bundles/*/usr/bin/*-x /opt/exodus/bundles/*/usr/lib/llvm-${LLVM_VERSION}/bin/*-x; do
     p=$(basename $f)
     g=${p::-2}
     cp $f toolchain/bin/$g
@@ -184,14 +184,14 @@ echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a  AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
+GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
 " >toolchain/usr/lib/libc.so
 elif [ "${ARCH}" = "aarch64" ]; then
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a  AS_NEEDED ( ../../lib/ld-linux-aarch64.so.1 ) )
+GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a AS_NEEDED ( ../../lib/ld-linux-aarch64.so.1 ) )
 " >toolchain/usr/lib/libc.so
 else
     echo "Unknown architecture: ${ARCH}"

@@ -143,6 +143,9 @@ RUN exodus /usr/bin/yasm /usr/bin/nasm /usr/bin/nm /usr/bin/addr2line /usr/bin/p
     /usr/bin/clang-format-${LLVM_VERSION} \
     /usr/bin/clang-cpp-${LLVM_VERSION} \
     /usr/bin/clang-${LLVM_VERSION} \
+    /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-link \
+    /usr/lib/llvm-${LLVM_VERSION}/bin/llc \
+    /usr/lib/llvm-${LLVM_VERSION}/bin/opt \
     /usr/bin/llvm-strip-${LLVM_VERSION} \
     /usr/bin/llvm-install-name-tool-${LLVM_VERSION} \
     /usr/bin/llvm-objcopy-${LLVM_VERSION} \
