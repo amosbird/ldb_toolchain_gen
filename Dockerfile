@@ -1,6 +1,8 @@
 FROM ubuntu:18.04 AS generator
 
-ENV DEBIAN_FRONTEND=noninteractive GCC_VERSION=11 ARCH=x86_64
+# Cannot use 20.04 with glibc 2.30 because of pthread_cond_clockwait etc.
+
+ENV DEBIAN_FRONTEND=noninteractive GCC_VERSION=13 ARCH=x86_64
 
 RUN apt-get update \
     && apt-get install ca-certificates lsb-release wget gnupg apt-transport-https software-properties-common \
@@ -103,7 +105,7 @@ RUN wget https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/nasm-2.16.01.tar.gz 
     cd .. && \
     rm -rf nasm-2.16.01.tar.gz nasm-2.16.01
 
-ENV LLVM_VERSION=16
+ENV LLVM_VERSION=17
 
 RUN echo "deb [trusted=yes] http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${LLVM_VERSION} main" >> /etc/apt/sources.list
 
@@ -120,7 +122,7 @@ RUN apt-get update \
         libclang-rt-${LLVM_VERSION}-dev \
         --yes --no-install-recommends
 
-RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/usr/lib/llvm-16/bin/clang --version  | head -n 1 | awk '{print $4}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
+RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/usr/lib/llvm-${LLVM_VERSION}/bin/clang --version  | head -n 1 | awk '{print $4}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
 
 RUN exodus /usr/bin/yasm /usr/bin/nasm /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/ninja \
     /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd \
@@ -128,11 +130,12 @@ RUN exodus /usr/bin/yasm /usr/bin/nasm /usr/bin/nm /usr/bin/addr2line /usr/bin/p
     /usr/bin/gcc-nm-${GCC_VERSION} \
     /usr/bin/gcc-${GCC_VERSION} \
     /usr/bin/${ARCH}-linux-gnu-cpp-${GCC_VERSION} \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/lto1 \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/lto-wrapper \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/cc1 \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/cc1plus \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/collect2 \
+    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/lto1 \
+    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/lto-wrapper \
+    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/cc1 \
+    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/cc1plus \
+    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/collect2 \
+    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/g++-mapper-server \
     /usr/bin/lldb-argdumper-${LLVM_VERSION} \
     /usr/bin/lldb-instr-${LLVM_VERSION} \
     /usr/bin/lldb-server-${LLVM_VERSION} \
@@ -169,9 +172,9 @@ RUN mkdir /tests
 
 COPY a.c /tests/
 
-COPY libstdc++.a /tmp/libstdc++.a
-
-RUN if [ "${ARCH}" = "x86_64" ] ; then cp /tmp/libstdc++.a /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.a; fi
+# __cxa_thread_atexit
+# COPY libstdc++.a /tmp/libstdc++.a
+# RUN if [ "${ARCH}" = "x86_64" ] ; then cp /tmp/libstdc++.a /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.a; fi
 
 ADD glibc-compatibility /glibc-compatibility
 

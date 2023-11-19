@@ -82,8 +82,10 @@ done
 
 for f in cc1 cc1plus collect2 g++-mapper-server lto1 lto-wrapper
 do
-    bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../..' "lib/gcc/${ARCH}-linux-gnu/11/$f" &> /dev/null || true
+    bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../../../lib' "libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$f" &> /dev/null || true
 done
+
+cp lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblto_plugin.so libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblto_plugin.so
 
 for c in clang clang++ gcc g++
 do
