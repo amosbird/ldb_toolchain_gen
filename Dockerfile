@@ -13,7 +13,7 @@ RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
 RUN apt-get update \
     && apt-get install \
         g++-${GCC_VERSION} \
-        ninja-build \
+        cmake \
         pkg-config \
         tzdata \
         python3-pip \
@@ -77,9 +77,11 @@ COPY --from=glibc /opt/libc6_2.27-3ubuntu1.6_*.deb /opt/
 
 RUN dpkg -i /opt/libc6_2.27-3ubuntu1.6_*.deb
 
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-${ARCH}.tar.gz -O /opt/cmake-3.22.1-linux-${ARCH}.tar.gz
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.29.0/cmake-3.29.0-linux-${ARCH}.tar.gz -O /opt/cmake-3.29.0-linux-${ARCH}.tar.gz
 
 RUN wget https://github.com/NixOS/patchelf/releases/download/0.14.3/patchelf-0.14.3-${ARCH}.tar.gz -O /opt/patchelf-0.14.3-${ARCH}.tar.gz
+
+RUN if [ "${ARCH}" = "x86_64" ]; then wget https://github.com/apple/foundationdb/releases/download/7.1.59/foundationdb-clients_7.1.59-1_amd64.deb -O /opt/foundationdb-clients_7.1.59-1_amd64.deb && dpkg -i /opt/foundationdb-clients_7.1.59-1_amd64.deb; fi
 
 RUN pip3 install setuptools
 
@@ -105,7 +107,16 @@ RUN wget https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/nasm-2.16.01.tar.gz 
     cd .. && \
     rm -rf nasm-2.16.01.tar.gz nasm-2.16.01
 
-ENV LLVM_VERSION=17
+RUN wget https://github.com/ninja-build/ninja/archive/refs/tags/v1.11.1.tar.gz -O /opt/ninja-1.11.1.tar.gz && \
+    cd /opt && \
+    tar zxf ninja-1.11.1.tar.gz && \
+    cd ninja-1.11.1 && \
+    ./configure.py --bootstrap && \
+    cp ninja /usr/bin/ && \
+    cd .. && \
+    rm -rf ninja-1.11.1.tar.gz ninja-1.11.1
+
+ENV LLVM_VERSION=18
 
 RUN echo "deb [trusted=yes] http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${LLVM_VERSION} main" >> /etc/apt/sources.list
 
@@ -139,7 +150,7 @@ RUN exodus /usr/bin/yasm /usr/bin/nasm /usr/bin/nm /usr/bin/addr2line /usr/bin/p
     /usr/bin/lldb-argdumper-${LLVM_VERSION} \
     /usr/bin/lldb-instr-${LLVM_VERSION} \
     /usr/bin/lldb-server-${LLVM_VERSION} \
-    /usr/bin/lldb-vscode-${LLVM_VERSION} \
+    /usr/bin/lldb-dap-${LLVM_VERSION} \
     /usr/bin/lldb-${LLVM_VERSION} \
     /usr/bin/clangd-${LLVM_VERSION} \
     /usr/bin/clang-tidy-${LLVM_VERSION} \
@@ -164,7 +175,7 @@ COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
 RUN mkdir /wrappers
 
-COPY tfg.py flamegraph bison ldb_gperf gcc g++ clang clang++ curl /wrappers/
+COPY tfg.py flamegraph bison ldb_gperf gcc g++ clang clang++ clangd curl /wrappers/
 
 ADD tfg /wrappers/tfg
 

@@ -83,6 +83,19 @@ else
     exit 1
 fi
 
+ln -sf gcc-ar-${GCC_VERSION} toolchain/bin/gcc-ar
+ln -sf gcc-nm-${GCC_VERSION} toolchain/bin/gcc-nm
+ln -sf gcc-ranlib-${GCC_VERSION} toolchain/bin/gcc-ranlib
+ln -sf llvm-ar-${LLVM_VERSION} toolchain/bin/llvm-ar
+ln -sf llvm-cov-${LLVM_VERSION} toolchain/bin/llvm-cov
+ln -sf llvm-install-name-tool-${LLVM_VERSION} toolchain/bin/llvm-install-name-tool
+ln -sf llvm-nm-${LLVM_VERSION} toolchain/bin/llvm-nm
+ln -sf llvm-objcopy-${LLVM_VERSION} toolchain/bin/llvm-objcopy
+ln -sf llvm-profdata-${LLVM_VERSION} toolchain/bin/llvm-profdata
+ln -sf llvm-profgen-${LLVM_VERSION} toolchain/bin/llvm-profgen
+ln -sf llvm-ranlib-${LLVM_VERSION} toolchain/bin/llvm-ranlib
+ln -sf llvm-strip-${LLVM_VERSION} toolchain/bin/llvm-strip
+
 ln -sf lld-${LLVM_VERSION} toolchain/bin/ld.lld
 ln -sf lld-${LLVM_VERSION} toolchain/bin/ld.lld-${LLVM_VERSION}
 ln -sf clang-${LLVM_VERSION} toolchain/bin/clang++-${LLVM_VERSION}
@@ -94,7 +107,6 @@ ln -sf llvm-ranlib-${LLVM_VERSION} toolchain/bin/ranlib
 # llvm-nm somehow doesn't work when compiling hyperscan's fat runtime
 # ln -sf llvm-nm-${LLVM_VERSION} toolchain/bin/nm
 ln -sf lldb-${LLVM_VERSION} toolchain/bin/lldb
-ln -sf clangd-${LLVM_VERSION} toolchain/bin/clangd
 ln -sf clang-tidy-${LLVM_VERSION} toolchain/bin/clang-tidy
 ln -sf clang-format-${LLVM_VERSION} toolchain/bin/clang-format
 ln -sf gcc toolchain/bin/cc
@@ -118,7 +130,7 @@ else
     exit 1
 fi
 
-tar xzf /opt/cmake-3.22.1-linux-${ARCH}.tar.gz --strip-components=1 --exclude='*/doc' --exclude='*/man' -C toolchain
+tar xzf /opt/cmake-3.29.0-linux-${ARCH}.tar.gz --strip-components=1 --exclude='*/doc' --exclude='*/man' -C toolchain
 
 # JDK and Maven are too large
 # mkdir toolchain/apache-maven-3.8.4
@@ -139,6 +151,18 @@ cp -r --parents \
     /usr/include/rpcsvc \
     /usr/include/${ARCH}-linux-gnu/sys/soundcard.h \
     toolchain
+
+# fdb client
+if [ "${ARCH}" = "x86_64" ]; then
+    cp -r --parents /usr/include/foundationdb toolchain
+
+    # Require glibc >= 2.17
+    cp /usr/lib/libfdb_c.so toolchain/lib/
+
+    cp /usr/lib/cmake/FoundationDB-Client/* toolchain/
+    sed -i 's=${_IMPORT_PREFIX}/usr/lib/libfdb_c.so=${CMAKE_CURRENT_LIST_DIR}/lib/libfdb_c.so=' \
+        toolchain/FoundationDB-Client-release.cmake
+fi
 
 # Additional libs
 cp -L \
@@ -277,6 +301,7 @@ sed -i "s/<GCC_VERSION>/$GCC_VERSION/" toolchain/bin/gcc
 sed -i "s/<GCC_VERSION>/$GCC_VERSION/" toolchain/bin/g++
 sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clang
 sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clang++
+sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clangd
 
 # Setup gcc toolchains
 
