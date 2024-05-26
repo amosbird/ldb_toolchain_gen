@@ -48,14 +48,13 @@ There are projects like Crosstool-NG and Gentoo-Prefix which aim at bootstraping
 
 ## Tools used by LDB toolchain generator
 
-1. https://github.com/intoli/exodus
-2. https://github.com/NixOS/patchelf
+1. https://github.com/NixOS/patchelf
 
-[Exodus](https://github.com/intoli/exodus) generates relocate Linux ELF binaries with wrappers and dependencies. Dependencies are recursively collected. Wrappers are usually good enough for common tools. However, toolchains like GCC and Clang relies heavily on `/proc/self` to re-exec the driver program multiple times, which will not work for `ld-linux` wrappers. As a result, we use [patchelf](https://github.com/NixOS/patchelf) to modify `PT_INTERP` and `RPATH`. Though `RPATH` can be relative to the binary's location, it's not possible to make a relocatable a.out that can tolerate changes to the absolute path of `ld-linux`. Thus, LDB toolchain generator requires user to specify a **toolchain prefix**.
+There are projects like [Exodus](https://github.com/intoli/exodus) which can generate relocate Linux ELF binaries with wrappers and dependencies. Wrappers are usually good enough for common tools. However, toolchains like GCC and Clang relies heavily on `/proc/self` to re-exec the driver program multiple times, which will not work for `ld-linux` wrappers. As a result, we use [patchelf](https://github.com/NixOS/patchelf) to modify `PT_INTERP` and `RPATH`. Though `RPATH` can be relative to the binary's location, it's not possible to make a relocatable a.out that can tolerate changes to the absolute path of `ld-linux`. Thus, LDB toolchain generator requires user to specify a **toolchain prefix**.
 
 ## How to generate a LDB toolchain generator
 
-The main branch illustrates how the generator assembles gcc-11 and clang-15 from ubuntu-18.04.
+The main branch illustrates how the generator assembles gcc-13 and clang-18 from ubuntu-18.04.
 
 To actually generate the toolchain, the following steps can be used:
 

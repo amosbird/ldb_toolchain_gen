@@ -11,22 +11,63 @@ fi
 
 mkdir -p toolchain/{bin,lib,libexec}
 
-cp -r -L /opt/exodus/bundles/*/lib/${ARCH}-linux-gnu/* toolchain/lib/
+mkdir -p toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
 
-cp -r -L /opt/exodus/bundles/*/usr/lib/${ARCH}-linux-gnu/* toolchain/lib/
+for bin in /usr/bin/yasm /usr/bin/nasm /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/ninja \
+    /usr/bin/m4 /usr/bin/bison /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd \
+    /usr/bin/gcc-ranlib-${GCC_VERSION} /usr/bin/g++-${GCC_VERSION} /usr/bin/gcc-ar-${GCC_VERSION} \
+    /usr/bin/gcc-nm-${GCC_VERSION} \
+    /usr/bin/gcc-${GCC_VERSION} \
+    /usr/bin/${ARCH}-linux-gnu-cpp-${GCC_VERSION} \
+    /usr/bin/lldb-argdumper-${LLVM_VERSION} \
+    /usr/bin/lldb-instr-${LLVM_VERSION} \
+    /usr/bin/lldb-server-${LLVM_VERSION} \
+    /usr/bin/lldb-dap-${LLVM_VERSION} \
+    /usr/bin/lldb-${LLVM_VERSION} \
+    /usr/bin/clangd-${LLVM_VERSION} \
+    /usr/bin/clang-tidy-${LLVM_VERSION} \
+    /usr/bin/clang-format-${LLVM_VERSION} \
+    /usr/bin/clang-cpp-${LLVM_VERSION} \
+    /usr/bin/clang-${LLVM_VERSION} \
+    /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-link \
+    /usr/lib/llvm-${LLVM_VERSION}/bin/llc \
+    /usr/lib/llvm-${LLVM_VERSION}/bin/opt \
+    /usr/lib/llvm-${LLVM_VERSION}/bin/clang-scan-deps \
+    /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-addr2line \
+    /usr/bin/llvm-strip-${LLVM_VERSION} \
+    /usr/bin/llvm-install-name-tool-${LLVM_VERSION} \
+    /usr/bin/llvm-objcopy-${LLVM_VERSION} \
+    /usr/bin/llvm-ranlib-${LLVM_VERSION} \
+    /usr/bin/llvm-ar-${LLVM_VERSION} \
+    /usr/bin/llvm-nm-${LLVM_VERSION} \
+    /usr/bin/llvm-cov-${LLVM_VERSION} \
+    /usr/bin/llvm-profdata-${LLVM_VERSION} \
+    /usr/bin/llvm-profgen-${LLVM_VERSION} \
+    /usr/bin/lld-${LLVM_VERSION}; do
+    cp $bin toolchain/bin/
+done
 
-cp -r -L /opt/exodus/bundles/*/usr/lib/*.so* toolchain/lib/
+cp /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer toolchain/bin/
+
+for bin in {lto1,lto-wrapper,cc1,cc1plus,collect2,g++-mapper-server}; do
+    objcopy --strip-debug --remove-section=.comment --remove-section=.note "/usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$bin" "toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$bin"
+done
+
+while read -r lib
+do
+    cp "$lib" toolchain/lib/
+done < <(./ldd-recursive.pl toolchain/bin/* "toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}"/*)
 
 cp -L \
-      /lib/${ARCH}-linux-gnu/libresolv.so.2 \
-      /lib/${ARCH}-linux-gnu/libnss_nisplus.so.2 \
-      /lib/${ARCH}-linux-gnu/libnss_compat.so.2 \
-      /lib/${ARCH}-linux-gnu/libnss_dns.so.2 \
-      /lib/${ARCH}-linux-gnu/libnss_files.so.2 \
-      /lib/${ARCH}-linux-gnu/libnss_hesiod.so.2 \
-      /lib/${ARCH}-linux-gnu/libnss_nis.so.2 \
-      /lib/${ARCH}-linux-gnu/libtinfo.so.5 \
-      /lib/${ARCH}-linux-gnu/libncursesw.so.5 \
+    /lib/${ARCH}-linux-gnu/libresolv.so.2 \
+    /lib/${ARCH}-linux-gnu/libnss_nisplus.so.2 \
+    /lib/${ARCH}-linux-gnu/libnss_compat.so.2 \
+    /lib/${ARCH}-linux-gnu/libnss_dns.so.2 \
+    /lib/${ARCH}-linux-gnu/libnss_files.so.2 \
+    /lib/${ARCH}-linux-gnu/libnss_hesiod.so.2 \
+    /lib/${ARCH}-linux-gnu/libnss_nis.so.2 \
+    /lib/${ARCH}-linux-gnu/libtinfo.so.5 \
+    /lib/${ARCH}-linux-gnu/libncursesw.so.5 \
     toolchain/lib/
 
 # Provide gperf CPU profiler
@@ -45,18 +86,11 @@ gcc -shared -fPIC /disable_ld_preload.c -o toolchain/lib/disable_ld_preload.so -
 tar xzf /opt/patchelf-0.14.3-${ARCH}.tar.gz ./bin/patchelf --strip-components=2
 
 for lib in toolchain/lib/*; do
-    if [[ ! "$lib" = "toolchain/lib/libc.so.6"* ]]; then
+    name=$(basename "$lib")
+    if [[ "$name" != "libc.so.6" && "$name" != ld-linux-* ]]; then
         ./patchelf --set-rpath '$ORIGIN' "$lib"
     fi
 done
-
-for f in /opt/exodus/bundles/*/usr/bin/*-x /opt/exodus/bundles/*/usr/lib/llvm-${LLVM_VERSION}/bin/*-x; do
-    p=$(basename $f)
-    g=${p::-2}
-    cp $f toolchain/bin/$g
-done
-
-cp /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer toolchain/bin/
 
 interpreter=""
 if [ "${ARCH}" = "x86_64" ]; then
@@ -72,6 +106,10 @@ for bin in toolchain/bin/*; do
     ./patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../lib' "$bin"
 done
 
+for bin in "toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}"/*; do
+    ./patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../..' "$bin"
+done
+
 ln -sf ld.bfd toolchain/bin/ld
 
 if [ "${ARCH}" = "x86_64" ]; then
@@ -82,6 +120,8 @@ else
     echo "Unknown architecture: ${ARCH}"
     exit 1
 fi
+
+cp /usr/bin/yacc toolchain/bin/
 
 ln -sf gcc-ar-${GCC_VERSION} toolchain/bin/gcc-ar
 ln -sf gcc-nm-${GCC_VERSION} toolchain/bin/gcc-nm
@@ -121,15 +161,6 @@ mv toolchain/bin/lldb-server-${LLVM_VERSION} toolchain/bin/lldb-server-${LLVM_VE
 # gcc-nm-11
 # gcc-ranlib-11
 
-if [ "${ARCH}" = "x86_64" ]; then
-    cp -L /opt/exodus/bundles/*/usr/bin/linker-* toolchain/lib/ld-linux-x86-64.so.2
-elif [ "${ARCH}" = "aarch64" ]; then
-    cp -L /opt/exodus/bundles/*/usr/bin/linker-* toolchain/lib/ld-linux-aarch64.so.1
-else
-    echo "Unknown architecture: ${ARCH}"
-    exit 1
-fi
-
 tar xzf /opt/cmake-3.29.0-linux-${ARCH}.tar.gz --strip-components=1 --exclude='*/doc' --exclude='*/man' -C toolchain
 
 # JDK and Maven are too large
@@ -154,13 +185,16 @@ cp -r --parents \
 
 # fdb client
 if [ "${ARCH}" = "x86_64" ]; then
-    cp -r --parents /usr/include/foundationdb toolchain
+    mkdir -p toolchain/fdb/lib toolchain/fdb/include
+    cp -r /usr/include/foundationdb toolchain/fdb/include/
 
     # Require glibc >= 2.17
-    cp /usr/lib/libfdb_c.so toolchain/lib/
+    cp /usr/lib/libfdb_c.so toolchain/fdb/lib/
 
     cp /usr/lib/cmake/FoundationDB-Client/* toolchain/
-    sed -i 's=${_IMPORT_PREFIX}/usr/lib/libfdb_c.so=${CMAKE_CURRENT_LIST_DIR}/lib/libfdb_c.so=' \
+    sed -i 's=${_IMPORT_PREFIX}/usr/lib/libfdb_c.so=${CMAKE_CURRENT_LIST_DIR}/fdb/lib/libfdb_c.so=' \
+        toolchain/FoundationDB-Client-release.cmake
+    sed -i '/set_target_properties(fdb_c PROPERTIES/a\ \ INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/fdb/include"' \
         toolchain/FoundationDB-Client-release.cmake
 fi
 
@@ -204,14 +238,14 @@ else
 fi
 
 if [ "${ARCH}" = "x86_64" ]; then
-echo "/* GNU ld script
+    echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
 GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
 " >toolchain/usr/lib/libc.so
 elif [ "${ARCH}" = "aarch64" ]; then
-echo "/* GNU ld script
+    echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
@@ -275,15 +309,15 @@ if [ "${ARCH}" = "x86_64" ]; then
 OUTPUT_FORMAT(elf64-${output_format})
 GROUP ( ./libglibc-compatibility.a ./libm-2.27.a ./libmvec.a ./libpthread.a )
 " >toolchain/usr/lib/libm.a
-cp -L /usr/lib/${ARCH}-linux-gnu/libm-2.27.a toolchain/usr/lib/
-cp -L /usr/lib/${ARCH}-linux-gnu/libmvec.a toolchain/usr/lib/
+    cp -L /usr/lib/${ARCH}-linux-gnu/libm-2.27.a toolchain/usr/lib/
+    cp -L /usr/lib/${ARCH}-linux-gnu/libmvec.a toolchain/usr/lib/
 elif [ "${ARCH}" = "aarch64" ]; then
     echo "/* GNU ld script
 */
 OUTPUT_FORMAT(elf64-${output_format})
 GROUP ( ./libglibc-compatibility.a ./libm-2.27.a ./libpthread.a )
 " >toolchain/usr/lib/libm.a
-cp -L /usr/lib/${ARCH}-linux-gnu/libm.a toolchain/usr/lib/libm-2.27.a
+    cp -L /usr/lib/${ARCH}-linux-gnu/libm.a toolchain/usr/lib/libm-2.27.a
 else
     echo "Unknown architecture: ${ARCH}"
     exit 1
@@ -305,42 +339,33 @@ sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clangd
 
 # Setup gcc toolchains
 
-mkdir -p toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION} toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
-
-for f in /opt/exodus/bundles/*/usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/*-x
-do
-    p=$(basename $f)
-    g=${p::-2}
-    cp -L $f toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$g
-    strip toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$g
-    ./patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../..' toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$g
-done
+mkdir -p toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
 
 cp -r -L /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtbegin.o \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtend.o \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtbeginT.o \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtbeginS.o \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtendS.o \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcc_eh.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcc.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libstdc++.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libstdc++fs.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libatomic.so \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libatomic.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblto_plugin.so \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcov.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libsanitizer.spec \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan_preinit.o \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan.so \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libtsan.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libtsan.so \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libubsan.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libubsan.so \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan_preinit.o \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan.a \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan.so \
-         /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/include \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtend.o \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtbeginT.o \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtbeginS.o \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtendS.o \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcc_eh.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcc.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libstdc++.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libstdc++fs.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libatomic.so \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libatomic.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblto_plugin.so \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcov.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libsanitizer.spec \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan_preinit.o \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan.so \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libtsan.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libtsan.so \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libubsan.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libubsan.so \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan_preinit.o \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan.a \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan.so \
+    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/include \
     toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
 
 # gomp
@@ -355,14 +380,13 @@ ln -s gcc/x86_64-linux-gnu/${GCC_VERSION}/libgomp.so toolchain/lib/libgomp.so.1
 
 if [ "${ARCH}" = "x86_64" ]; then
     cp -r -L \
-    /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec32.o \
-    /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec64.o \
-    /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec80.o \
-    toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
+        /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec32.o \
+        /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec64.o \
+        /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec80.o \
+        toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
 fi
 
-for so in toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/*.so
-do
+for so in toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/*.so; do
     ./patchelf --set-rpath '$ORIGIN/../../..' "$so"
 done
 
@@ -408,13 +432,13 @@ cp -r -L /usr/lib/llvm-${LLVM_VERSION}/lib/clang/${LLVM_VERSION} toolchain/lib/c
 cp -r /usr/lib/llvm-${LLVM_VERSION}/include/c++/v1 toolchain/include/c++/
 
 cp -L \
-        /usr/lib/llvm-${LLVM_VERSION}/lib/libunwind.so \
-        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++abi.so \
-        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++.so.1 \
-        /usr/lib/llvm-${LLVM_VERSION}/lib/libunwind.a \
-        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++.a \
-        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++experimental.a \
-        /usr/lib/llvm-${LLVM_VERSION}/lib/libc++abi.a \
+    /usr/lib/llvm-${LLVM_VERSION}/lib/libunwind.so \
+    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++abi.so \
+    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++.so.1 \
+    /usr/lib/llvm-${LLVM_VERSION}/lib/libunwind.a \
+    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++.a \
+    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++experimental.a \
+    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++abi.a \
     toolchain/lib/
 
 ./patchelf --set-rpath '$ORIGIN' toolchain/lib/libc++.so.1
@@ -451,7 +475,7 @@ cp -r /usr/share/aclocal toolchain/share/
     make
     /data/toolchain/bin/ar x libglibc-compatibility.a
     /data/toolchain/bin/ld -relocatable ./*.o -o glibc-compatibility.o
-) &> /dev/null
+) &>/dev/null
 
 cp /glibc-compatibility/build/libglibc-compatibility.a /glibc-compatibility/build/glibc-compatibility.o toolchain/usr/lib/
 
@@ -461,6 +485,6 @@ sed -i "s/\${ARCH}/$ARCH/g" /setup_toolchain.sh
 sed -i "s/\${GCC_VERSION}/$GCC_VERSION/g" /setup_toolchain.sh
 sed -i "s/\${LLVM_VERSION}/$LLVM_VERSION/g" /setup_toolchain.sh
 
-cat /setup_toolchain.sh toolchain.tgz > ldb_toolchain_gen.sh
+cat /setup_toolchain.sh toolchain.tgz >ldb_toolchain_gen.sh
 
 chmod +x ldb_toolchain_gen.sh

@@ -85,8 +85,6 @@ RUN if [ "${ARCH}" = "x86_64" ]; then wget https://github.com/apple/foundationdb
 
 RUN pip3 install setuptools
 
-RUN pip3 install git+https://github.com/intoli/exodus@ef3d5e92c1b604b09cf0a57baff0f4d0b421b8da
-
 RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.tar.gz && \
     cd /opt && \
     tar zxf bison-3.5.1.tar.gz && \
@@ -134,42 +132,6 @@ RUN apt-get update \
         --yes --no-install-recommends
 
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/usr/lib/llvm-${LLVM_VERSION}/bin/clang --version  | head -n 1 | awk '{print $4}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
-
-RUN exodus /usr/bin/yasm /usr/bin/nasm /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/ninja \
-    /usr/bin/m4 /usr/bin/bison /usr/bin/yacc /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd \
-    /usr/bin/gcc-ranlib-${GCC_VERSION} /usr/bin/g++-${GCC_VERSION} /usr/bin/gcc-ar-${GCC_VERSION} \
-    /usr/bin/gcc-nm-${GCC_VERSION} \
-    /usr/bin/gcc-${GCC_VERSION} \
-    /usr/bin/${ARCH}-linux-gnu-cpp-${GCC_VERSION} \
-    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/lto1 \
-    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/lto-wrapper \
-    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/cc1 \
-    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/cc1plus \
-    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/collect2 \
-    /usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/g++-mapper-server \
-    /usr/bin/lldb-argdumper-${LLVM_VERSION} \
-    /usr/bin/lldb-instr-${LLVM_VERSION} \
-    /usr/bin/lldb-server-${LLVM_VERSION} \
-    /usr/bin/lldb-dap-${LLVM_VERSION} \
-    /usr/bin/lldb-${LLVM_VERSION} \
-    /usr/bin/clangd-${LLVM_VERSION} \
-    /usr/bin/clang-tidy-${LLVM_VERSION} \
-    /usr/bin/clang-format-${LLVM_VERSION} \
-    /usr/bin/clang-cpp-${LLVM_VERSION} \
-    /usr/bin/clang-${LLVM_VERSION} \
-    /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-link \
-    /usr/lib/llvm-${LLVM_VERSION}/bin/llc \
-    /usr/lib/llvm-${LLVM_VERSION}/bin/opt \
-    /usr/bin/llvm-strip-${LLVM_VERSION} \
-    /usr/bin/llvm-install-name-tool-${LLVM_VERSION} \
-    /usr/bin/llvm-objcopy-${LLVM_VERSION} \
-    /usr/bin/llvm-ranlib-${LLVM_VERSION} \
-    /usr/bin/llvm-ar-${LLVM_VERSION} \
-    /usr/bin/llvm-nm-${LLVM_VERSION} \
-    /usr/bin/llvm-cov-${LLVM_VERSION} \
-    /usr/bin/llvm-profdata-${LLVM_VERSION} \
-    /usr/bin/llvm-profgen-${LLVM_VERSION} \
-    /usr/bin/lld-${LLVM_VERSION} | bash
 
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
