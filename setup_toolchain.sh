@@ -80,12 +80,22 @@ do
     bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../lib' "$f" &> /dev/null || true
 done
 
-for f in cc1 cc1plus collect2 g++-mapper-server lto1 lto-wrapper
+for f in tmp/gentoo/bin/*
 do
-    bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../../../lib' "libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$f" &> /dev/null || true
+    bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../../lib' "$f" &> /dev/null || true
 done
 
-cp lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblto_plugin.so libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblto_plugin.so
+for f in tmp/gentoo/llvm/bin/*
+do
+    bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../../../lib' "$f" &> /dev/null || true
+done
+
+for f in cc1 cc1plus collect2 g++-mapper-server lto1 lto-wrapper
+do
+    bin/patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../../../lib' "libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/$f" &> /dev/null || true
+done
+
+bin/patchelf --set-rpath '$ORIGIN/../../../../lib' "libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblto_plugin.so" &> /dev/null || true
 
 for c in clang clang++ gcc g++
 do
@@ -97,7 +107,13 @@ do
 done
 
 if ! bin/gcc test/a.c -o test/a; then
-    echo "Generated toolchain cannot compile a simple program."
+    echo "Generated toolchain (gcc) cannot compile a simple program."
+    echo "Please file an issue at https://github.com/amosbird/ldb_toolchain_gen/issues with current setup information."
+    exit 1
+fi
+
+if ! bin/clang test/a.c -o test/a; then
+    echo "Generated toolchain (clang) cannot compile a simple program."
     echo "Please file an issue at https://github.com/amosbird/ldb_toolchain_gen/issues with current setup information."
     exit 1
 fi

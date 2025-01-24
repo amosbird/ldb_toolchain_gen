@@ -11,52 +11,99 @@ fi
 
 mkdir -p toolchain/{bin,lib,libexec}
 
-mkdir -p toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
+# GCC finds either ${ARCH}-pc-linux-gnu/${GCC_VERSION} or ${ARCH}-linux-gnu/
+mkdir -p toolchain/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
 
-for bin in /usr/bin/yasm /usr/bin/nasm /usr/bin/nm /usr/bin/addr2line /usr/bin/python3 /usr/bin/curl /usr/bin/gdb /usr/bin/ninja \
-    /usr/bin/m4 /usr/bin/bison /usr/bin/flex /usr/bin/pkg-config /usr/bin/as /usr/bin/ld.bfd \
-    /usr/bin/gcc-ranlib-${GCC_VERSION} /usr/bin/g++-${GCC_VERSION} /usr/bin/gcc-ar-${GCC_VERSION} \
-    /usr/bin/gcc-nm-${GCC_VERSION} \
-    /usr/bin/gcc-${GCC_VERSION} \
-    /usr/bin/${ARCH}-linux-gnu-cpp-${GCC_VERSION} \
-    /usr/bin/lldb-argdumper-${LLVM_VERSION} \
-    /usr/bin/lldb-instr-${LLVM_VERSION} \
-    /usr/bin/lldb-server-${LLVM_VERSION} \
-    /usr/bin/lldb-dap-${LLVM_VERSION} \
-    /usr/bin/lldb-${LLVM_VERSION} \
-    /usr/bin/clangd-${LLVM_VERSION} \
-    /usr/bin/clang-tidy-${LLVM_VERSION} \
-    /usr/bin/clang-format-${LLVM_VERSION} \
-    /usr/bin/clang-cpp-${LLVM_VERSION} \
-    /usr/bin/clang-${LLVM_VERSION} \
-    /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-link \
-    /usr/lib/llvm-${LLVM_VERSION}/bin/llc \
-    /usr/lib/llvm-${LLVM_VERSION}/bin/opt \
-    /usr/lib/llvm-${LLVM_VERSION}/bin/clang-scan-deps \
-    /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-addr2line \
-    /usr/bin/llvm-strip-${LLVM_VERSION} \
-    /usr/bin/llvm-install-name-tool-${LLVM_VERSION} \
-    /usr/bin/llvm-objcopy-${LLVM_VERSION} \
-    /usr/bin/llvm-ranlib-${LLVM_VERSION} \
-    /usr/bin/llvm-ar-${LLVM_VERSION} \
-    /usr/bin/llvm-nm-${LLVM_VERSION} \
-    /usr/bin/llvm-cov-${LLVM_VERSION} \
-    /usr/bin/llvm-profdata-${LLVM_VERSION} \
-    /usr/bin/llvm-profgen-${LLVM_VERSION} \
-    /usr/bin/lld-${LLVM_VERSION}; do
-    cp $bin toolchain/bin/
+binaries=(
+    /usr/bin/yasm
+    /usr/bin/nm
+    /usr/bin/addr2line
+    /usr/bin/curl
+    /usr/bin/m4
+    /usr/bin/bison
+    /usr/bin/flex
+    /usr/bin/pkg-config
+    /tmp/gentoo/usr/bin/python
+    /tmp/gentoo/usr/bin/nasm
+    /tmp/gentoo/usr/bin/gdb
+    /tmp/gentoo/usr/bin/ninja
+    /tmp/gentoo/usr/bin/as
+    /tmp/gentoo/usr/bin/ld.bfd
+    /tmp/gentoo/usr/bin/gcc-ranlib
+    /tmp/gentoo/usr/bin/gcc-ar
+    /tmp/gentoo/usr/bin/gcc-nm
+    /tmp/gentoo/usr/bin/${ARCH}-pc-linux-gnu-cpp
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang-tidy
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang-format
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang-cpp
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-link
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llc
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/opt
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang-scan-deps
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-addr2line
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-strip
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-install-name-tool
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-objcopy
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-ranlib
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-ar
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-nm
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-cov
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-profdata
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-profgen
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/llvm-symbolizer
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/lld
+    /tmp/gentoo/usr/bin/lldb-argdumper
+    /tmp/gentoo/usr/bin/lldb-instr
+    /tmp/gentoo/usr/bin/lldb-server
+    /tmp/gentoo/usr/bin/lldb-dap
+    /tmp/gentoo/usr/bin/lldb
+)
+
+for bin in "${binaries[@]}"; do
+    cp "$bin" toolchain/bin/
 done
 
-cp /usr/lib/llvm-${LLVM_VERSION}/bin/llvm-symbolizer toolchain/bin/
+mkdir -p toolchain/tmp/gentoo/bin
 
-for bin in {lto1,lto-wrapper,cc1,cc1plus,collect2,g++-mapper-server}; do
-    objcopy --strip-debug --remove-section=.comment --remove-section=.note "/usr/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$bin" "toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/$bin"
+gcc_drivers=(
+    /tmp/gentoo/usr/bin/g++
+    /tmp/gentoo/usr/bin/gcc
+)
+
+for bin in "${gcc_drivers[@]}"; do
+    cp "$bin" toolchain/tmp/gentoo/bin/
+done
+
+mkdir -p toolchain/tmp/gentoo/llvm/bin
+
+clang_drivers=(
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang
+    /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clangd
+)
+
+for bin in "${clang_drivers[@]}"; do
+    cp "$bin" toolchain/tmp/gentoo/llvm/bin/
+done
+
+gcc_binaries=(
+    lto1
+    lto-wrapper
+    cc1
+    cc1plus
+    collect2
+    g++-mapper-server
+)
+
+for bin in "${gcc_binaries[@]}"; do
+    objcopy --strip-debug --remove-section=.comment --remove-section=.note \
+        "/tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/$bin" \
+        "toolchain/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/$bin"
 done
 
 while read -r lib
 do
     cp "$lib" toolchain/lib/
-done < <(./ldd-recursive.pl toolchain/bin/* "toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}"/*)
+done < <(./ldd-recursive.pl "${binaries[@]}" "${compiler_drivers[@]}")
 
 cp -L \
     /lib/${ARCH}-linux-gnu/libresolv.so.2 \
@@ -102,20 +149,12 @@ else
     exit 1
 fi
 
-for bin in toolchain/bin/*; do
-    ./patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../lib' "$bin"
-done
-
-for bin in "toolchain/libexec/gcc/${ARCH}-linux-gnu/${GCC_VERSION}"/*; do
-    ./patchelf --set-interpreter "$interpreter" --set-rpath '$ORIGIN/../../..' "$bin"
-done
-
-ln -sf ld.bfd toolchain/bin/ld
+ln -sf ld.lld toolchain/bin/ld
 
 if [ "${ARCH}" = "x86_64" ]; then
-    ln -sf ld.bfd toolchain/bin/x86_64-pc-linux-gnu-ld # clang tries to find this linker
+    ln -sf ld.lld toolchain/bin/x86_64-pc-linux-gnu-ld # clang tries to find this linker
 elif [ "${ARCH}" = "aarch64" ]; then
-    ln -sf ld.bfd toolchain/bin/aarch64-linux-gnu-ld # clang tries to find this linker
+    ln -sf ld.lld toolchain/bin/aarch64-linux-gnu-ld # clang tries to find this linker
 else
     echo "Unknown architecture: ${ARCH}"
     exit 1
@@ -123,35 +162,18 @@ fi
 
 cp /usr/bin/yacc toolchain/bin/
 
-ln -sf gcc-ar-${GCC_VERSION} toolchain/bin/gcc-ar
-ln -sf gcc-nm-${GCC_VERSION} toolchain/bin/gcc-nm
-ln -sf gcc-ranlib-${GCC_VERSION} toolchain/bin/gcc-ranlib
-ln -sf llvm-ar-${LLVM_VERSION} toolchain/bin/llvm-ar
-ln -sf llvm-cov-${LLVM_VERSION} toolchain/bin/llvm-cov
-ln -sf llvm-install-name-tool-${LLVM_VERSION} toolchain/bin/llvm-install-name-tool
-ln -sf llvm-nm-${LLVM_VERSION} toolchain/bin/llvm-nm
-ln -sf llvm-objcopy-${LLVM_VERSION} toolchain/bin/llvm-objcopy
-ln -sf llvm-profdata-${LLVM_VERSION} toolchain/bin/llvm-profdata
-ln -sf llvm-profgen-${LLVM_VERSION} toolchain/bin/llvm-profgen
-ln -sf llvm-ranlib-${LLVM_VERSION} toolchain/bin/llvm-ranlib
-ln -sf llvm-strip-${LLVM_VERSION} toolchain/bin/llvm-strip
-
-ln -sf lld-${LLVM_VERSION} toolchain/bin/ld.lld
-ln -sf lld-${LLVM_VERSION} toolchain/bin/ld.lld-${LLVM_VERSION}
-ln -sf clang-${LLVM_VERSION} toolchain/bin/clang++-${LLVM_VERSION}
-ln -sf llvm-objcopy-${LLVM_VERSION} toolchain/bin/objcopy
-ln -sf llvm-objdump-${LLVM_VERSION} toolchain/bin/objdump
-ln -sf clang-cpp-${LLVM_VERSION} toolchain/bin/cpp
-ln -sf llvm-ar-${LLVM_VERSION} toolchain/bin/ar
-ln -sf llvm-ranlib-${LLVM_VERSION} toolchain/bin/ranlib
+ln -sf lld toolchain/bin/ld.lld
+ln -sf clang toolchain/tmp/gentoo/llvm/bin/clang++
+ln -sf llvm-objcopy toolchain/bin/llvm-install-name-tool
+ln -sf llvm-objcopy toolchain/bin/objcopy
+ln -sf llvm-objdump toolchain/bin/objdump
+ln -sf clang-cpp toolchain/bin/cpp
+ln -sf llvm-ar toolchain/bin/ar
+ln -sf llvm-ranlib toolchain/bin/ranlib
 # llvm-nm somehow doesn't work when compiling hyperscan's fat runtime
 # ln -sf llvm-nm-${LLVM_VERSION} toolchain/bin/nm
-ln -sf lldb-${LLVM_VERSION} toolchain/bin/lldb
-ln -sf clang-tidy-${LLVM_VERSION} toolchain/bin/clang-tidy
-ln -sf clang-format-${LLVM_VERSION} toolchain/bin/clang-format
 ln -sf gcc toolchain/bin/cc
 ln -sf g++ toolchain/bin/c++
-mv toolchain/bin/lldb-server-${LLVM_VERSION} toolchain/bin/lldb-server-${LLVM_VERSION}.0.1
 
 # ln -sf gcc-ranlib-11 toolchain/bin/ranlib
 # ln -sf gcc-ar-11 toolchain/bin/ar
@@ -162,6 +184,8 @@ mv toolchain/bin/lldb-server-${LLVM_VERSION} toolchain/bin/lldb-server-${LLVM_VE
 # gcc-ranlib-11
 
 tar xzf /opt/cmake-3.29.0-linux-${ARCH}.tar.gz --strip-components=1 --exclude='*/doc' --exclude='*/man' -C toolchain
+
+cp /FindThrift.cmake toolchain/share/cmake-3.29/Modules/
 
 # JDK and Maven are too large
 # mkdir toolchain/apache-maven-3.8.4
@@ -176,7 +200,7 @@ mkdir -p toolchain/usr/lib
 
 cp -r --parents /usr/include toolchain
 
-# Python-3.6.6
+# Python
 cp -r --parents \
     /usr/include/rpc \
     /usr/include/rpcsvc \
@@ -331,62 +355,60 @@ mv toolchain/bin/curl toolchain/bin/ldb-curl
 
 cp -r /wrappers/* toolchain/bin/
 
-sed -i "s/<GCC_VERSION>/$GCC_VERSION/" toolchain/bin/gcc
-sed -i "s/<GCC_VERSION>/$GCC_VERSION/" toolchain/bin/g++
-sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clang
-sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clang++
-sed -i "s/<LLVM_VERSION>/$LLVM_VERSION/" toolchain/bin/clangd
+sed -i "s:<ARCH>/<GCC_VERSION>:${ARCH}-pc-linux-gnu/${GCC_VERSION}:" toolchain/bin/clang
+sed -i "s:<ARCH>/<GCC_VERSION>:${ARCH}-pc-linux-gnu/${GCC_VERSION}:" toolchain/bin/clang++
 
 # Setup gcc toolchains
 
-mkdir -p toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
+mkdir -p toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
 
-cp -r -L /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtbegin.o \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtend.o \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtbeginT.o \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtbeginS.o \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtendS.o \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcc_eh.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcc.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libstdc++.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libstdc++fs.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libatomic.so \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libatomic.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblto_plugin.so \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcov.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libsanitizer.spec \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan_preinit.o \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libasan.so \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libtsan.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libtsan.so \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libubsan.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libubsan.so \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan_preinit.o \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/liblsan.so \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/include \
-    toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
+cp -r -L /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtbegin.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtend.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtbeginT.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtbeginS.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtendS.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcc_eh.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcc.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libstdc++.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libstdc++fs.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libatomic.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libatomic.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcov.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libsanitizer.spec \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libasan_preinit.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libasan.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libasan.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libtsan.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libtsan.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libubsan.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libubsan.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblsan_preinit.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblsan.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblsan.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/include \
+    toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
+
+cp -r -L /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblto_plugin.so toolchain/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
 
 # gomp
 cp -r -L \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/crtfastmath.o \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgomp.a \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgomp.so \
-    /usr/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgomp.spec \
-    toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtfastmath.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.spec \
+    toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
 
-ln -s gcc/x86_64-linux-gnu/${GCC_VERSION}/libgomp.so toolchain/lib/libgomp.so.1
+ln -s gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.so toolchain/lib/libgomp.so.1
 
 if [ "${ARCH}" = "x86_64" ]; then
     cp -r -L \
-        /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec32.o \
-        /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec64.o \
-        /usr/lib/gcc/x86_64-linux-gnu/${GCC_VERSION}/crtprec80.o \
-        toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}
+        /tmp/gentoo/usr/lib/gcc/x86_64-pc-linux-gnu/${GCC_VERSION}/crtprec32.o \
+        /tmp/gentoo/usr/lib/gcc/x86_64-pc-linux-gnu/${GCC_VERSION}/crtprec64.o \
+        /tmp/gentoo/usr/lib/gcc/x86_64-pc-linux-gnu/${GCC_VERSION}/crtprec80.o \
+        toolchain/lib/gcc/x86_64-pc-linux-gnu/${GCC_VERSION}
 fi
 
-for so in toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/*.so; do
+for so in toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/*.so; do
     ./patchelf --set-rpath '$ORIGIN/../../..' "$so"
 done
 
@@ -394,51 +416,43 @@ echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
 GROUP ( ./libstdc++.a ./libstdc++fs.a )
-" >toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libstdc++.so
+" >toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libstdc++.so
 
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
 GROUP ( -lgcc -lgcc_eh )
-" >toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcc_s.so
+" >toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcc_s.so
 
 # Sometimes static linking might still link to libgcc_s. Use ld script to redirect.
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
 GROUP ( -lgcc -lgcc_eh )
-" >toolchain/lib/gcc/${ARCH}-linux-gnu/${GCC_VERSION}/libgcc_s.a
+" >toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcc_s.a
 
-mkdir -p toolchain/include/${ARCH}-linux-gnu/c++
-mkdir -p toolchain/include/c++
-
-cp -r /usr/include/${ARCH}-linux-gnu/c++/${GCC_VERSION} toolchain/include/${ARCH}-linux-gnu/c++/
-cp -r /usr/include/c++/${GCC_VERSION} toolchain/include/c++/
+cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/include toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/
+cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/include-fixed toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/
+cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/finclude toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/
 
 # Setup clang resource includes
 
 mkdir -p toolchain/lib/clang
-cp -r -L /usr/lib/llvm-${LLVM_VERSION}/lib/clang/${LLVM_VERSION} toolchain/lib/clang/
-
-# cp -r -L /usr/lib/clang/${LLVM_VERSION_FULL} toolchain/lib/clang/${LLVM_VERSION_FULL}
-
-# for so in toolchain/lib/clang/${LLVM_VERSION_FULL}/lib/linux/*.so
-# do
-#     ./patchelf --set-rpath '$ORIGIN/../../../..' "$so"
-# done
+cp -r -L /tmp/gentoo/usr/lib/clang/${LLVM_VERSION} toolchain/lib/clang/
 
 # libc++
 
-cp -r /usr/lib/llvm-${LLVM_VERSION}/include/c++/v1 toolchain/include/c++/
+mkdir -p toolchain/include/c++
+cp -r /tmp/gentoo/usr/include/c++/v1 toolchain/include/c++/
 
 cp -L \
-    /usr/lib/llvm-${LLVM_VERSION}/lib/libunwind.so \
-    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++abi.so \
-    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++.so.1 \
-    /usr/lib/llvm-${LLVM_VERSION}/lib/libunwind.a \
-    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++.a \
-    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++experimental.a \
-    /usr/lib/llvm-${LLVM_VERSION}/lib/libc++abi.a \
+    /tmp/gentoo/usr/lib/libunwind.so \
+    /tmp/gentoo/usr/lib/libc++.so.1 \
+    /tmp/gentoo/usr/lib/libc++.a \
+    /tmp/gentoo/usr/lib/libc++experimental.a \
+    /tmp/gentoo/usr/lib/libc++_static.a \
+    /tmp/gentoo/usr/lib/libc++abi.a \
+    /tmp/gentoo/usr/lib/libc++abi.so \
     toolchain/lib/
 
 ./patchelf --set-rpath '$ORIGIN' toolchain/lib/libc++.so.1
@@ -452,16 +466,16 @@ echo "INPUT(./libc++.so.1 -lunwind -lc++abi)" >toolchain/lib/libc++.so
 cp ./patchelf toolchain/bin/
 cp -r /tests toolchain/test
 
-mv toolchain/bin/python3 toolchain/bin/ldb-python3
-cp -r /usr/lib/python3.6 toolchain/lib/
-cp -r /usr/share/gdb toolchain/share/
+mv toolchain/bin/python toolchain/bin/ldb-python
+cp -r /tmp/gentoo/usr/lib/python3.12 toolchain/lib/
+cp -r /tmp/gentoo/usr/share/gdb toolchain/share/
 # printers for gcc
-cp -r /usr/share/gcc toolchain/share/gdb/
+# cp -r /tmp/gentoo/usr/share/gcc toolchain/share/gdb/
 # printers for clang
 mkdir -p toolchain/share/gdb/libcxx
 cp /opt/printers.py toolchain/share/gdb/libcxx/
 
-cp /usr/bin/gdb-add-index toolchain/bin/
+cp /tmp/gentoo/usr/bin/gdb-add-index toolchain/bin/
 cp /usr/bin/google-pprof toolchain/bin/pprof
 
 cp -r /usr/share/bison toolchain/share/
@@ -475,7 +489,7 @@ cp -r /usr/share/aclocal toolchain/share/
     make
     /data/toolchain/bin/ar x libglibc-compatibility.a
     /data/toolchain/bin/ld -relocatable ./*.o -o glibc-compatibility.o
-) &>/dev/null
+)
 
 cp /glibc-compatibility/build/libglibc-compatibility.a /glibc-compatibility/build/glibc-compatibility.o toolchain/usr/lib/
 

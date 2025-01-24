@@ -1,57 +1,88 @@
 FROM ubuntu:18.04 AS generator
 
-# Cannot use 20.04 with glibc 2.30 because of pthread_cond_clockwait etc.
+RUN apt-get update
 
-ENV DEBIAN_FRONTEND=noninteractive GCC_VERSION=13 ARCH=x86_64
+RUN apt-get install apt-utils sudo -y
 
-RUN apt-get update \
-    && apt-get install ca-certificates lsb-release wget gnupg apt-transport-https software-properties-common \
-        --yes --no-install-recommends --verbose-versions
+# Create user
+RUN useradd --create-home --shell=/bin/bash user
+RUN chown -R user /home/user/
+# Add the user to sudoers
+RUN chmod -R o-w /etc/sudoers.d/
+RUN usermod -aG sudo user
+# Give the user a password
+RUN echo user:user | chpasswd
 
-RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
+RUN apt-get install build-essential wget -y
 
-RUN apt-get update \
-    && apt-get install \
-        g++-${GCC_VERSION} \
-        cmake \
-        pkg-config \
-        tzdata \
-        python3-pip \
-        python-dev \
-        musl-tools \
-        binutils-dev \
-        libiberty-dev \
-        build-essential \
-        fakeroot \
-        dpkg-dev \
-        git \
-        flex \
-        autoconf \
-        gdb \
-        google-perftools \
-        libssl-dev \
-        gettext \
-        file \
-        quilt \
-        gawk \
-        debhelper \
-        rdfind \
-        symlinks \
-        netbase \
-        gperf \
-        bison \
-        systemtap-sdt-dev \
-        libaudit-dev \
-        libcap-dev \
-        libselinux-dev \
-        po-debconf \
-        yasm \
-        rsync \
-        libltdl7 \
-        vim \
-        --yes --no-install-recommends
+WORKDIR /data
+USER user
+
+COPY bootstrap-prefix.sh /data/
+
+RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage1 LATEST_TREE_YES=1 TESTING_PV=latest bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+
+RUN truncate -s 0 /tmp/gentoo/var/db/repos/gentoo/profiles/package.mask
+
+RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage2 LATEST_TREE_YES=1 TESTING_PV=latest bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+
+RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage3 LATEST_TREE_YES=1 TESTING_PV=latest bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+
+RUN PREFIX_DISABLE_RAP=yes LATEST_TREE_YES=1 TESTING_PV=latest bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+
+USER root
+
+ENV DEBIAN_FRONTEND=noninteractive ARCH=x86_64
+
+RUN apt-get install \
+    cmake \
+    pkg-config \
+    tzdata \
+    python3-pip \
+    python-dev \
+    musl-tools \
+    binutils-dev \
+    libiberty-dev \
+    build-essential \
+    fakeroot \
+    dpkg-dev \
+    git \
+    flex \
+    autoconf \
+    google-perftools \
+    libssl-dev \
+    gettext \
+    file \
+    quilt \
+    gawk \
+    debhelper \
+    rdfind \
+    symlinks \
+    netbase \
+    gperf \
+    bison \
+    systemtap-sdt-dev \
+    libaudit-dev \
+    libcap-dev \
+    libselinux-dev \
+    zlib1g-dev \
+    libtinfo-dev \
+    libffi-dev \
+    po-debconf \
+    yasm \
+    rsync \
+    libltdl7 \
+    vim \
+    --yes --no-install-recommends
 
 RUN if [ "${ARCH}" = "x86_64" ] ; then apt-get install g++-7-multilib --yes --no-install-recommends; fi
+
+COPY execute-prefix.sh /data/
+
+# libcxx has a regression which failed to build without -lpthread because newer glibc provides everything in libc.so
+RUN sed -i "s=libc_nonshared.a=libc_nonshared.a /lib/${ARCH}-linux-gnu/libpthread.so.0 /usr/lib/${ARCH}-linux-gnu/libpthread_nonshared.a=" /usr/lib/${ARCH}-linux-gnu/libc.so
+
+RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb
 
 FROM generator AS glibc
 
@@ -95,43 +126,9 @@ RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.ta
     cd .. && \
     rm -rf bison-3.5.1 bison-3.5.1.tar.gz
 
-RUN wget https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/nasm-2.16.01.tar.gz -O /opt/nasm-2.16.01.tar.gz && \
-    cd /opt && \
-    tar zxf nasm-2.16.01.tar.gz && \
-    cd nasm-2.16.01 && \
-    ./configure --prefix=/usr && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -rf nasm-2.16.01.tar.gz nasm-2.16.01
+ENV GCC_VERSION=14 LLVM_VERSION=19
 
-RUN wget https://github.com/ninja-build/ninja/archive/refs/tags/v1.11.1.tar.gz -O /opt/ninja-1.11.1.tar.gz && \
-    cd /opt && \
-    tar zxf ninja-1.11.1.tar.gz && \
-    cd ninja-1.11.1 && \
-    ./configure.py --bootstrap && \
-    cp ninja /usr/bin/ && \
-    cd .. && \
-    rm -rf ninja-1.11.1.tar.gz ninja-1.11.1
-
-ENV LLVM_VERSION=18
-
-RUN echo "deb [trusted=yes] http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${LLVM_VERSION} main" >> /etc/apt/sources.list
-
-RUN apt-get update \
-    && apt-get install \
-        llvm-${LLVM_VERSION}-dev \
-        clang-${LLVM_VERSION} \
-        clang-format-${LLVM_VERSION} \
-        clang-tidy-${LLVM_VERSION} \
-        lld-${LLVM_VERSION} \
-        lldb-${LLVM_VERSION} \
-        libc++-${LLVM_VERSION}-dev libc++abi-${LLVM_VERSION}-dev \
-        clangd-${LLVM_VERSION} \
-        libclang-rt-${LLVM_VERSION}-dev \
-        --yes --no-install-recommends
-
-RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/usr/lib/llvm-${LLVM_VERSION}/bin/clang --version  | head -n 1 | awk '{print $4}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
+RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang --version  | head -n 1 | awk '{print $3}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
 
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
@@ -145,9 +142,7 @@ RUN mkdir /tests
 
 COPY a.c /tests/
 
-# __cxa_thread_atexit
-# COPY libstdc++.a /tmp/libstdc++.a
-# RUN if [ "${ARCH}" = "x86_64" ] ; then cp /tmp/libstdc++.a /usr/lib/gcc/x86_64-linux-gnu/11/libstdc++.a; fi
+COPY FindThrift.cmake /
 
 ADD glibc-compatibility /glibc-compatibility
 
