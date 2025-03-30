@@ -77,12 +77,8 @@ RUN apt-get install \
 
 RUN if [ "${ARCH}" = "x86_64" ] ; then apt-get install g++-7-multilib --yes --no-install-recommends; fi
 
-COPY execute-prefix.sh /data/
-
 # libcxx has a regression which failed to build without -lpthread because newer glibc provides everything in libc.so
 RUN sed -i "s=libc_nonshared.a=libc_nonshared.a /lib/${ARCH}-linux-gnu/libpthread.so.0 /usr/lib/${ARCH}-linux-gnu/libpthread_nonshared.a=" /usr/lib/${ARCH}-linux-gnu/libc.so
-
-RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb
 
 FROM generator AS glibc
 
@@ -125,6 +121,20 @@ RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.ta
     make install && \
     cd .. && \
     rm -rf bison-3.5.1 bison-3.5.1.tar.gz
+
+COPY execute-prefix.sh /data/
+
+RUN mkdir -p /tmp/gentoo/etc/portage/env
+
+RUN bash -c "echo 'MYCMAKEARGS=\"\${MYCMAKEARGS} -DLIBOMP_ENABLE_SHARED=OFF\"' > /tmp/gentoo/etc/portage/env/openmp-static.conf"
+
+RUN bash -c 'echo llvm-runtimes/openmp openmp-static.conf > /tmp/gentoo/etc/portage/package.env'
+
+RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb llvm-runtimes/openmp
+
+RUN bash execute-prefix.sh emerge --sync
+
+RUN bash execute-prefix.sh emerge --update --deep --changed-use @world
 
 ENV GCC_VERSION=14 LLVM_VERSION=19
 

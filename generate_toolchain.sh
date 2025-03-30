@@ -398,6 +398,19 @@ cp -r -L \
     /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.spec \
     toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
 
+# libomp
+cp -r -L \
+    /tmp/gentoo/usr/include/omp.h \
+    /tmp/gentoo/usr/include/ompx.h \
+    toolchain/usr/include/
+
+cp -r -L \
+    /tmp/gentoo/usr/lib/libomp.a \
+    toolchain/lib/libomp-bin.a
+
+# newer clang doesn't work well with old glibc, missing dl when compiling with -fopenmp
+echo "GROUP ( ./libomp-bin.a -ldl )" >toolchain/lib/libomp.a
+
 ln -s gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.so toolchain/lib/libgomp.so.1
 
 if [ "${ARCH}" = "x86_64" ]; then
