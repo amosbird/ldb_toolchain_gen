@@ -86,24 +86,23 @@ for bin in "${clang_drivers[@]}"; do
 done
 
 gcc_binaries=(
-    lto1
-    lto-wrapper
-    cc1
-    cc1plus
-    collect2
-    g++-mapper-server
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/lto1
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/lto-wrapper
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/cc1
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/cc1plus
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/collect2
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/g++-mapper-server
 )
 
 for bin in "${gcc_binaries[@]}"; do
     objcopy --strip-debug --remove-section=.comment --remove-section=.note \
-        "/tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/$bin" \
-        "toolchain/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/$bin"
+        "$bin" "toolchain/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/$(basename $bin)"
 done
 
 while read -r lib
 do
     cp "$lib" toolchain/lib/
-done < <(./ldd-recursive.pl "${binaries[@]}" "${compiler_drivers[@]}")
+done < <(./ldd-recursive.pl "${binaries[@]}" "${gcc_drivers[@]}" "${clang_drivers[@]}" "${gcc_binaries[@]}")
 
 cp -L \
     /lib/${ARCH}-linux-gnu/libresolv.so.2 \
@@ -480,7 +479,7 @@ cp ./patchelf toolchain/bin/
 cp -r /tests toolchain/test
 
 mv toolchain/bin/python toolchain/bin/ldb-python
-cp -r /tmp/gentoo/usr/lib/python3.12 toolchain/lib/
+cp -r /tmp/gentoo/usr/lib/python3.13 toolchain/lib/
 cp -r /tmp/gentoo/usr/share/gdb toolchain/share/
 # printers for gcc
 # cp -r /tmp/gentoo/usr/share/gcc toolchain/share/gdb/
