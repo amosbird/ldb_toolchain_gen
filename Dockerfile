@@ -15,24 +15,35 @@ RUN echo user:user | chpasswd
 
 RUN apt-get install build-essential wget -y
 
+ENV ARCH=x86_64
+
+# some packages like libcrypt and libcxx has a regression which failed to build without -lpthread because newer glibc provides everything in libc.so
+RUN sed -i "s=libc_nonshared.a=libc_nonshared.a /lib/${ARCH}-linux-gnu/libpthread.so.0 /usr/lib/${ARCH}-linux-gnu/libpthread_nonshared.a=" /usr/lib/${ARCH}-linux-gnu/libc.so
+
 WORKDIR /data
 USER user
 
 COPY bootstrap-prefix.sh /data/
 
-RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage1 LATEST_TREE_YES=1 TESTING_PV=latest bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage1 bash bootstrap-prefix.sh /tmp/gentoo noninteractive
 
 RUN truncate -s 0 /tmp/gentoo/var/db/repos/gentoo/profiles/package.mask
 
-RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage2 LATEST_TREE_YES=1 TESTING_PV=latest bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+# Disable __cxa_thread_atexit_impl
+COPY portage_bashrc /tmp/gentoo/tmp/etc/portage/bashrc
 
-RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage3 LATEST_TREE_YES=1 TESTING_PV=latest bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage2 bash bootstrap-prefix.sh /tmp/gentoo noninteractive
 
-RUN PREFIX_DISABLE_RAP=yes LATEST_TREE_YES=1 TESTING_PV=latest bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+# Disable __cxa_thread_atexit_impl
+COPY portage_bashrc /tmp/gentoo/etc/portage/bashrc
+
+RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage3 bash bootstrap-prefix.sh /tmp/gentoo noninteractive
+
+RUN PREFIX_DISABLE_RAP=yes bash bootstrap-prefix.sh /tmp/gentoo noninteractive
 
 USER root
 
-ENV DEBIAN_FRONTEND=noninteractive ARCH=x86_64
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get install \
     cmake \
@@ -76,9 +87,6 @@ RUN apt-get install \
     --yes --no-install-recommends
 
 RUN if [ "${ARCH}" = "x86_64" ] ; then apt-get install g++-7-multilib --yes --no-install-recommends; fi
-
-# libcxx has a regression which failed to build without -lpthread because newer glibc provides everything in libc.so
-RUN sed -i "s=libc_nonshared.a=libc_nonshared.a /lib/${ARCH}-linux-gnu/libpthread.so.0 /usr/lib/${ARCH}-linux-gnu/libpthread_nonshared.a=" /usr/lib/${ARCH}-linux-gnu/libc.so
 
 FROM generator AS glibc
 
@@ -136,7 +144,7 @@ RUN bash execute-prefix.sh emerge --sync
 
 RUN bash execute-prefix.sh emerge --update --deep --changed-use @world
 
-ENV GCC_VERSION=14 LLVM_VERSION=19
+ENV GCC_VERSION=15 LLVM_VERSION=20
 
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang --version  | head -n 1 | awk '{print $3}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
 

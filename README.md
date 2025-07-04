@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-LDB toolchain generator gives you a working gcc-14 and clang-19 environment with cmake 3.29. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
+LDB toolchain generator gives you a working gcc-15 and clang-20 environment with cmake 3.29. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
 
 ByConity is supported as well, but it requires manual adjustments due to its outdated toolchain support. If you just need to make `clangd` happy (e.g., for code completion and navigation), run the following:
 
@@ -65,7 +65,7 @@ There are projects like [Exodus](https://github.com/intoli/exodus) which can gen
 
 ## How to generate a LDB toolchain generator
 
-The main branch illustrates how the generator assembles gcc-13 and clang-18 from ubuntu-18.04.
+The main branch illustrates how the generator assembles gcc-15 and clang-20 from ubuntu-18.04.
 
 To actually generate the toolchain, the following steps can be used:
 
