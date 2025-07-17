@@ -1,0 +1,21 @@
+if [[ ${CATEGORY}/${PN} == sys-devel/gcc && ${EBUILD_PHASE} == compile ]]; then
+    echo "[hook] Disabling atexit_thread.cc usage of __cxa_thread_atexit_impl..." >&2
+
+    sed -i 's/^#define _GLIBCXX_MAY_HAVE___CXA_THREAD_ATEXIT_IMPL 1/\/\/ #undef _GLIBCXX_MAY_HAVE___CXA_THREAD_ATEXIT_IMPL/' ${WORKDIR}/*/libstdc++-v3/config/os/gnu-linux/os_defines.h
+
+    sed -i 's/_GLIBCXX_HAVE___CXA_THREAD_ATEXIT_IMPL/_GLIBCXX_HAVE___CXA_THREAD_ATEXIT_IMPL_DISABLED/g' "${WORKDIR}"/*/libstdc++-v3/libsupc++/atexit_thread.cc
+
+    sed -i 's/_GLIBCXX_MAY_HAVE___CXA_THREAD_ATEXIT_IMPL/_GLIBCXX_MAY_HAVE___CXA_THREAD_ATEXIT_IMPL_DISABLED/g' "${WORKDIR}"/*/libstdc++-v3/libsupc++/atexit_thread.cc
+fi
+
+# Fix gettext m4 macro path for pinentry
+if [[ ${CATEGORY}/${PN} == app-crypt/pinentry ]]; then
+    export AT_SYS_M4DIR="/usr/share/gettext/m4"
+fi
+
+if [[ ${CATEGORY}/${PN} == sys-libs/libunwind && ${EBUILD_PHASE} == compile ]]; then
+    echo "[hook] Adjusting UNW_TARGET_AARCH64 macro check in _UPT_ptrauth_insn_mask.c ..." >&2
+
+    sed -i 's|#ifdef UNW_TARGET_AARCH64|#if defined(UNW_TARGET_AARCH64) \&\& defined(NT_ARM_PAC_MASK)|' \
+        "${WORKDIR}"/*/src/ptrace/_UPT_ptrauth_insn_mask.c
+fi

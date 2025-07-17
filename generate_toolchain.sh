@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -x
 # Generate toolchain.tgz in CWD
 
 set -e
@@ -11,8 +12,8 @@ fi
 
 mkdir -p toolchain/{bin,lib,libexec}
 
-# GCC finds either ${ARCH}-pc-linux-gnu/${GCC_VERSION} or ${ARCH}-linux-gnu/
-mkdir -p toolchain/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
+# GCC finds either ${ARCH}-unknown-linux-gnu/${GCC_VERSION} or ${ARCH}-linux-gnu/
+mkdir -p toolchain/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}
 
 binaries=(
     /usr/bin/yasm
@@ -32,7 +33,7 @@ binaries=(
     /tmp/gentoo/usr/bin/gcc-ranlib
     /tmp/gentoo/usr/bin/gcc-ar
     /tmp/gentoo/usr/bin/gcc-nm
-    /tmp/gentoo/usr/bin/${ARCH}-pc-linux-gnu-cpp
+    /tmp/gentoo/usr/bin/${ARCH}-unknown-linux-gnu-cpp
     /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang-tidy
     /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang-format
     /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang-cpp
@@ -86,17 +87,17 @@ for bin in "${clang_drivers[@]}"; do
 done
 
 gcc_binaries=(
-    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/lto1
-    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/lto-wrapper
-    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/cc1
-    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/cc1plus
-    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/collect2
-    /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/g++-mapper-server
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/lto1
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/lto-wrapper
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/cc1
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/cc1plus
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/collect2
+    /tmp/gentoo/usr/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/g++-mapper-server
 )
 
 for bin in "${gcc_binaries[@]}"; do
     objcopy --strip-debug --remove-section=.comment --remove-section=.note \
-        "$bin" "toolchain/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/$(basename $bin)"
+        "$bin" "toolchain/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/$(basename $bin)"
 done
 
 while read -r lib
@@ -118,14 +119,7 @@ cp -L \
 
 # Provide gperf CPU profiler
 cp -L /usr/lib/${ARCH}-linux-gnu/libprofiler.so.0.4.8 toolchain/lib/libprofiler.so
-if [ "${ARCH}" = "x86_64" ]; then
-    cp -L /usr/lib/${ARCH}-linux-gnu/libunwind.so.8 toolchain/lib/
-elif [ "${ARCH}" = "aarch64" ]; then
-    cp -L /usr/lib/${ARCH}-linux-gnu/libunwind.so.1 toolchain/lib/
-else
-    echo "Unknown architecture: ${ARCH}"
-    exit 1
-fi
+cp -L /usr/lib/${ARCH}-linux-gnu/libunwind.so.8 toolchain/lib/
 
 gcc -shared -fPIC /disable_ld_preload.c -o toolchain/lib/disable_ld_preload.so -ldl
 
@@ -151,7 +145,7 @@ fi
 ln -sf ld.lld toolchain/bin/ld
 
 if [ "${ARCH}" = "x86_64" ]; then
-    ln -sf ld.lld toolchain/bin/x86_64-pc-linux-gnu-ld # clang tries to find this linker
+    ln -sf ld.lld toolchain/bin/x86_64-unknown-linux-gnu-ld # clang tries to find this linker
 elif [ "${ARCH}" = "aarch64" ]; then
     ln -sf ld.lld toolchain/bin/aarch64-linux-gnu-ld # clang tries to find this linker
 else
@@ -354,48 +348,48 @@ mv toolchain/bin/curl toolchain/bin/ldb-curl
 
 cp -r /wrappers/* toolchain/bin/
 
-sed -i "s:<ARCH>/<GCC_VERSION>:${ARCH}-pc-linux-gnu/${GCC_VERSION}:" toolchain/bin/clang
-sed -i "s:<ARCH>/<GCC_VERSION>:${ARCH}-pc-linux-gnu/${GCC_VERSION}:" toolchain/bin/clang++
+sed -i "s:<ARCH>/<GCC_VERSION>:${ARCH}-unknown-linux-gnu/${GCC_VERSION}:" toolchain/bin/clang
+sed -i "s:<ARCH>/<GCC_VERSION>:${ARCH}-unknown-linux-gnu/${GCC_VERSION}:" toolchain/bin/clang++
 
 # Setup gcc toolchains
 
-mkdir -p toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
+mkdir -p toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}
 
-cp -r -L /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtbegin.o \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtend.o \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtbeginT.o \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtbeginS.o \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtendS.o \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcc_eh.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcc.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libstdc++.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libstdc++fs.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libatomic.so \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libatomic.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcov.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libsanitizer.spec \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libasan_preinit.o \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libasan.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libasan.so \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libtsan.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libtsan.so \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libubsan.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libubsan.so \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblsan_preinit.o \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblsan.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblsan.so \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/include \
-    toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
+cp -r -L /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/crtbegin.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/crtend.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/crtbeginT.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/crtbeginS.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/crtendS.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgcc_eh.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgcc.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libstdc++.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libstdc++fs.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libatomic.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libatomic.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgcov.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libsanitizer.spec \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libasan_preinit.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libasan.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libasan.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libtsan.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libtsan.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libubsan.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libubsan.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/liblsan_preinit.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/liblsan.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/liblsan.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/include \
+    toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}
 
-cp -r -L /tmp/gentoo/usr/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/liblto_plugin.so toolchain/libexec/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
+cp -r -L /tmp/gentoo/usr/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/liblto_plugin.so toolchain/libexec/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}
 
 # gomp
 cp -r -L \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/crtfastmath.o \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.a \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.so \
-    /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.spec \
-    toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/crtfastmath.o \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgomp.a \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgomp.so \
+    /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgomp.spec \
+    toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}
 
 # libomp
 cp -r -L \
@@ -410,17 +404,17 @@ cp -r -L \
 # newer clang doesn't work well with old glibc, missing dl when compiling with -fopenmp
 echo "GROUP ( ./libomp-bin.a -ldl )" >toolchain/lib/libomp.a
 
-ln -s gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgomp.so toolchain/lib/libgomp.so.1
+ln -s gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgomp.so toolchain/lib/libgomp.so.1
 
 if [ "${ARCH}" = "x86_64" ]; then
     cp -r -L \
-        /tmp/gentoo/usr/lib/gcc/x86_64-pc-linux-gnu/${GCC_VERSION}/crtprec32.o \
-        /tmp/gentoo/usr/lib/gcc/x86_64-pc-linux-gnu/${GCC_VERSION}/crtprec64.o \
-        /tmp/gentoo/usr/lib/gcc/x86_64-pc-linux-gnu/${GCC_VERSION}/crtprec80.o \
-        toolchain/lib/gcc/x86_64-pc-linux-gnu/${GCC_VERSION}
+        /tmp/gentoo/usr/lib/gcc/x86_64-unknown-linux-gnu/${GCC_VERSION}/crtprec32.o \
+        /tmp/gentoo/usr/lib/gcc/x86_64-unknown-linux-gnu/${GCC_VERSION}/crtprec64.o \
+        /tmp/gentoo/usr/lib/gcc/x86_64-unknown-linux-gnu/${GCC_VERSION}/crtprec80.o \
+        toolchain/lib/gcc/x86_64-unknown-linux-gnu/${GCC_VERSION}
 fi
 
-for so in toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/*.so; do
+for so in toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/*.so; do
     ./patchelf --set-rpath '$ORIGIN/../../..' "$so"
 done
 
@@ -428,24 +422,24 @@ echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
 GROUP ( ./libstdc++.a ./libstdc++fs.a )
-" >toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libstdc++.so
+" >toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libstdc++.so
 
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
 GROUP ( -lgcc -lgcc_eh )
-" >toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcc_s.so
+" >toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgcc_s.so
 
 # Sometimes static linking might still link to libgcc_s. Use ld script to redirect.
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
 GROUP ( -lgcc -lgcc_eh )
-" >toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/libgcc_s.a
+" >toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/libgcc_s.a
 
-cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/include toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/
-cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/include-fixed toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/
-cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/finclude toolchain/lib/gcc/${ARCH}-pc-linux-gnu/${GCC_VERSION}/
+cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/include toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/
+cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/include-fixed toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/
+cp -r /tmp/gentoo/usr/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/finclude toolchain/lib/gcc/${ARCH}-unknown-linux-gnu/${GCC_VERSION}/
 
 # Setup clang resource includes
 
@@ -479,7 +473,7 @@ cp ./patchelf toolchain/bin/
 cp -r /tests toolchain/test
 
 mv toolchain/bin/python toolchain/bin/ldb-python
-cp -r /tmp/gentoo/usr/lib/python3.13 toolchain/lib/
+cp -r /tmp/gentoo/usr/lib/python3.12 toolchain/lib/
 cp -r /tmp/gentoo/usr/share/gdb toolchain/share/
 # printers for gcc
 # cp -r /tmp/gentoo/usr/share/gcc toolchain/share/gdb/
@@ -492,6 +486,8 @@ cp /usr/bin/google-pprof toolchain/bin/pprof
 
 cp -r /usr/share/bison toolchain/share/
 cp -r /usr/share/aclocal toolchain/share/
+
+ln -s lib toolchain/lib64
 
 (
     cd /glibc-compatibility

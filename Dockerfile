@@ -15,7 +15,7 @@ RUN echo user:user | chpasswd
 
 RUN apt-get install build-essential wget -y
 
-ENV ARCH=x86_64
+ENV ARCH=aarch64
 
 # some packages like libcrypt and libcxx has a regression which failed to build without -lpthread because newer glibc provides everything in libc.so
 RUN sed -i "s=libc_nonshared.a=libc_nonshared.a /lib/${ARCH}-linux-gnu/libpthread.so.0 /usr/lib/${ARCH}-linux-gnu/libpthread_nonshared.a=" /usr/lib/${ARCH}-linux-gnu/libc.so
@@ -32,10 +32,22 @@ RUN truncate -s 0 /tmp/gentoo/var/db/repos/gentoo/profiles/package.mask
 # Disable __cxa_thread_atexit_impl
 COPY portage_bashrc /tmp/gentoo/tmp/etc/portage/bashrc
 
+# Aarch64 only
+RUN ln -s /tmp/gentoo/tmp/usr/lib /tmp/gentoo/tmp/usr/lib64 
+
+COPY package.accept_keywords /tmp/gentoo/tmp/etc/portage/package.accept_keywords
+
 RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage2 bash bootstrap-prefix.sh /tmp/gentoo noninteractive
 
 # Disable __cxa_thread_atexit_impl
 COPY portage_bashrc /tmp/gentoo/etc/portage/bashrc
+
+# Aarch64 only
+RUN ln -s /tmp/gentoo/usr/lib /tmp/gentoo/usr/lib64 
+
+COPY package_stage3.accept_keywords /tmp/gentoo/etc/portage/package.accept_keywords
+
+RUN echo 'PYTHON_TARGETS="python3_12"' >> /tmp/gentoo/etc/portage/make.conf/0100_bootstrap_prefix_make.conf
 
 RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage3 bash bootstrap-prefix.sh /tmp/gentoo noninteractive
 
@@ -120,7 +132,7 @@ RUN if [ "${ARCH}" = "x86_64" ]; then wget https://github.com/apple/foundationdb
 
 RUN pip3 install setuptools
 
-RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.tar.gz && \
+RUN wget https://mirrors.tuna.tsinghua.edu.cn/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.tar.gz && \
     cd /opt && \
     tar zxf bison-3.5.1.tar.gz && \
     cd bison-3.5.1 && \
@@ -138,15 +150,25 @@ RUN bash -c "echo 'MYCMAKEARGS=\"\${MYCMAKEARGS} -DLIBOMP_ENABLE_SHARED=OFF\"' >
 
 RUN bash -c 'echo llvm-runtimes/openmp openmp-static.conf > /tmp/gentoo/etc/portage/package.env'
 
-RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb llvm-runtimes/openmp
-
-RUN bash execute-prefix.sh emerge --sync
-
-RUN bash execute-prefix.sh emerge --update --deep --changed-use @world
+COPY portage_bashrc2 /tmp/gentoo/etc/portage/bashrc
 
 ENV GCC_VERSION=15 LLVM_VERSION=20
 
+RUN mkdir -p /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib
+
+RUN ln -s /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib64
+
+RUN echo 'FEATURES="-qa ${FEATURES}"' >> /tmp/gentoo/etc/portage/make.conf/0100_bootstrap_prefix_make.conf
+
+RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb llvm-runtimes/openmp
+
+RUN bash execute-prefix.sh emerge --sync
+ 
+RUN bash execute-prefix.sh emerge --update --deep --changed-use @world
+
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang --version  | head -n 1 | awk '{print $3}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
+
+RUN apt-get install libunwind-dev --yes --no-install-recommends
 
 COPY generate_toolchain.sh setup_toolchain.sh disable_ld_preload.c /
 
