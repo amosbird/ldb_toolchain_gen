@@ -76,6 +76,9 @@ cd ldb_toolchain_gen
 
 docker build . -t <your_toolchain_generator_tag> --network host
 
+# for aarch64
+# docker build . -t <your_toolchain_generator_tag> --network host --build-arg ARCH=aarch64
+
 docker run --rm -v </path/to/store/toolchain>:/data <your_toolchain_generator_tag>
 
 # Concrete Example

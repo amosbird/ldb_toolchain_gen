@@ -996,8 +996,8 @@ python_ver() {
 	# snapshot for stage3, else packages will break with some python
 	# mismatch error due to Portage using a different version after it
 	# upgraded itself with a newer Python
-	echo 3.13
-	export PYTHON_FULL_VERSION="3.13.3"
+	echo 3.12
+	export PYTHON_FULL_VERSION="3.12.10"
 	# keep this number in line with PV below for stage1,2
 }
 

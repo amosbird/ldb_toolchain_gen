@@ -12,3 +12,10 @@ fi
 if [[ ${CATEGORY}/${PN} == app-crypt/pinentry ]]; then
     export AT_SYS_M4DIR="/usr/share/gettext/m4"
 fi
+
+if [[ ${CATEGORY}/${PN} == sys-libs/libunwind && ${EBUILD_PHASE} == compile ]]; then
+    echo "[hook] Adjusting UNW_TARGET_AARCH64 macro check in _UPT_ptrauth_insn_mask.c ..." >&2
+
+    sed -i 's|#ifdef UNW_TARGET_AARCH64|#if defined(UNW_TARGET_AARCH64) \&\& defined(NT_ARM_PAC_MASK)|' \
+        "${WORKDIR}"/*/src/ptrace/_UPT_ptrauth_insn_mask.c
+fi

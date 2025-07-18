@@ -1,0 +1,10 @@
+sys-apps/sed **
+sys-devel/binutils-config **
+sys-devel/binutils **
+sys-devel/gcc-config **
+sys-devel/gcc **
+sys-apps/coreutils **
+app-arch/bzip2 **
+sys-apps/portage **
+dev-lang/python **
+app-arch/zstd **

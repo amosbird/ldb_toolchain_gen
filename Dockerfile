@@ -1,5 +1,11 @@
 FROM ubuntu:18.04 AS generator
 
+ARG ARCH
+ENV ARCH=${ARCH:-x86_64}
+
+# assert ARCH is either x86_64 or aarch64
+RUN if [ "${ARCH}" != "x86_64" ] && [ "${ARCH}" != "aarch64" ]; then echo "Invalid ARCH: ${ARCH}. Must be 'x86_64' or 'aarch64'" >&2; exit 1; fi
+
 RUN apt-get update
 
 RUN apt-get install apt-utils sudo -y
@@ -14,8 +20,6 @@ RUN usermod -aG sudo user
 RUN echo user:user | chpasswd
 
 RUN apt-get install build-essential wget -y
-
-ENV ARCH=x86_64
 
 # some packages like libcrypt and libcxx has a regression which failed to build without -lpthread because newer glibc provides everything in libc.so
 RUN sed -i "s=libc_nonshared.a=libc_nonshared.a /lib/${ARCH}-linux-gnu/libpthread.so.0 /usr/lib/${ARCH}-linux-gnu/libpthread_nonshared.a=" /usr/lib/${ARCH}-linux-gnu/libc.so
@@ -32,10 +36,16 @@ RUN truncate -s 0 /tmp/gentoo/var/db/repos/gentoo/profiles/package.mask
 # Disable __cxa_thread_atexit_impl
 COPY portage_bashrc /tmp/gentoo/tmp/etc/portage/bashrc
 
+COPY package.accept_keywords /tmp/package.accept_keywords
+
+RUN if [ "${ARCH}" = "aarch64" ]; then ln -s /tmp/gentoo/tmp/usr/lib /tmp/gentoo/tmp/usr/lib64; cp /tmp/package.accept_keywords /tmp/gentoo/tmp/etc/portage/package.accept_keywords; fi
+
 RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage2 bash bootstrap-prefix.sh /tmp/gentoo noninteractive
 
 # Disable __cxa_thread_atexit_impl
 COPY portage_bashrc /tmp/gentoo/etc/portage/bashrc
+
+RUN if [ "${ARCH}" = "aarch64" ]; then ln -s /tmp/gentoo/usr/lib /tmp/gentoo/usr/lib64; cp /tmp/package.accept_keywords /tmp/gentoo/etc/portage/package.accept_keywords; echo 'PYTHON_TARGETS="python3_12"' >> /tmp/gentoo/etc/portage/make.conf/0100_bootstrap_prefix_make.conf; fi
 
 RUN PREFIX_DISABLE_RAP=yes STOP_BOOTSTRAP_AFTER=stage3 bash bootstrap-prefix.sh /tmp/gentoo noninteractive
 
@@ -79,6 +89,7 @@ RUN apt-get install \
     zlib1g-dev \
     libtinfo-dev \
     libffi-dev \
+    libunwind-dev \
     po-debconf \
     yasm \
     rsync \
@@ -86,7 +97,7 @@ RUN apt-get install \
     vim \
     --yes --no-install-recommends
 
-RUN if [ "${ARCH}" = "x86_64" ] ; then apt-get install g++-7-multilib --yes --no-install-recommends; fi
+RUN if [ "${ARCH}" = "x86_64" ]; then apt-get install g++-7-multilib --yes --no-install-recommends; fi
 
 FROM generator AS glibc
 
@@ -120,7 +131,7 @@ RUN if [ "${ARCH}" = "x86_64" ]; then wget https://github.com/apple/foundationdb
 
 RUN pip3 install setuptools
 
-RUN wget https://ftp.gnu.org/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.tar.gz && \
+RUN wget https://mirrors.tuna.tsinghua.edu.cn/gnu/bison/bison-3.5.1.tar.gz -O /opt/bison-3.5.1.tar.gz && \
     cd /opt && \
     tar zxf bison-3.5.1.tar.gz && \
     cd bison-3.5.1 && \
@@ -138,13 +149,15 @@ RUN bash -c "echo 'MYCMAKEARGS=\"\${MYCMAKEARGS} -DLIBOMP_ENABLE_SHARED=OFF\"' >
 
 RUN bash -c 'echo llvm-runtimes/openmp openmp-static.conf > /tmp/gentoo/etc/portage/package.env'
 
+ENV GCC_VERSION=15 LLVM_VERSION=20
+
+RUN if [ "${ARCH}" = "aarch64" ]; then mkdir -p /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib; ln -s /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib64; echo 'FEATURES="-qa ${FEATURES}"' >> /tmp/gentoo/etc/portage/make.conf/0100_bootstrap_prefix_make.conf; fi
+
 RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb llvm-runtimes/openmp
 
 RUN bash execute-prefix.sh emerge --sync
-
+ 
 RUN bash execute-prefix.sh emerge --update --deep --changed-use @world
-
-ENV GCC_VERSION=15 LLVM_VERSION=20
 
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang --version  | head -n 1 | awk '{print $3}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
 
