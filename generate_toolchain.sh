@@ -352,15 +352,23 @@ cp -r -L /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtbegin.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtendS.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgcc_eh.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgcc.a \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgfortran.a \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgfortran.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++fs.a \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++exp.a \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++.modules.json \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libsupc++.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libatomic.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libatomic.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgcov.a \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libhwasan.a \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libhwasan.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libsanitizer.spec \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libasan_preinit.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libasan.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libasan.so \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libtsan_preinit.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libtsan.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libtsan.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libubsan.a \
@@ -368,8 +376,13 @@ cp -r -L /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtbegin.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/liblsan_preinit.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/liblsan.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/liblsan.so \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/include \
     toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}
+
+if [ "${ARCH}" = "x86_64" ]; then
+    cp -r -L /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libquadmath.a \
+        /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libquadmath.so \
+        toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}
+fi
 
 cp -r -L /tmp/gentoo/usr/libexec/gcc/${TRIPLE}/${GCC_VERSION}/liblto_plugin.so toolchain/libexec/gcc/${TRIPLE}/${GCC_VERSION}
 
@@ -380,6 +393,16 @@ cp -r -L \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp.spec \
     toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}
+
+if [ "${ARCH}" = "x86_64" ]; then
+    cp -r -L \
+        /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtoffloadbegin.o \
+        /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtoffloadend.o \
+        /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtoffloadtable.o \
+        /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtoffloadtableS.o \
+        /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp-plugin-nvptx.so \
+        toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}
+fi
 
 # libomp
 cp -r -L \
@@ -412,7 +435,7 @@ done
 echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library.  */
-GROUP ( ./libstdc++.a ./libstdc++fs.a )
+GROUP ( ./libstdc++.a ./libstdc++exp.a ./libstdc++fs.a )
 " >toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++.so
 
 echo "/* GNU ld script
@@ -431,6 +454,7 @@ GROUP ( -lgcc -lgcc_eh )
 cp -r /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/include toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}/
 cp -r /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/include-fixed toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}/
 cp -r /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/finclude toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}/
+cp -r /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/plugin toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}/
 
 # Setup clang resource includes
 
