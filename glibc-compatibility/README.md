@@ -1,1 +1,1 @@
-This folder is forked from [ClickHouse](https://github.com/ClickHouse/ClickHouse/tree/8c9266b24c/base/glibc-compatibility)
+This folder is forked from [ClickHouse](https://github.com/ClickHouse/ClickHouse/tree/c0b3821d62/base/glibc-compatibility)

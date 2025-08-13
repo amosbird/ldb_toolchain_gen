@@ -113,6 +113,11 @@ do
     cp "$lib" toolchain/lib/
 done < <(./ldd-recursive.pl "${binaries[@]}" "${gcc_drivers[@]}" "${clang_drivers[@]}" "${gcc_binaries[@]}")
 
+# Workaround for ZSTD_compress2 symbol conflict: Copy the correct libzstd.so.1
+# from the Gentoo toolchain into the toolchain's lib directory to ensure LLVM/Ar
+# links against the expected Zstandard version at runtime.
+cp /tmp/gentoo/usr/lib/libzstd.so.1 toolchain/lib/
+
 cp -L \
     /lib/${ARCH}-linux-gnu/libresolv.so.2 \
     /lib/${ARCH}-linux-gnu/libnss_nisplus.so.2 \
@@ -205,6 +210,13 @@ if [ "${ARCH}" = "x86_64" ]; then
         toolchain/FoundationDB-Client-release.cmake
 fi
 
+# OpenBLAS
+cp -r /opt/OpenBLAS/include/* toolchain/usr/include/
+cp /opt/OpenBLAS/lib/libopenblas.a toolchain/usr/lib/
+cp /OpenBLASConfig.cmake /OpenBLASConfigVersion.cmake toolchain/
+
+cp -r /tmp/gentoo/usr/include/libaio.h toolchain/usr/include/
+
 # Additional libs
 cp -L \
     /usr/lib/${ARCH}-linux-gnu/libiberty.a \
@@ -218,6 +230,12 @@ cp -L \
     /usr/lib/${ARCH}-linux-gnu/libcrypto.a \
     /usr/lib/${ARCH}-linux-gnu/libnsl.a \
     toolchain/usr/lib/
+
+objcopy \
+    --redefine-sym io_getevents@@LIBAIO_0.4=io_getevents \
+    --redefine-sym io_getevents@LIBAIO_0.1=io_getevents_compat \
+    /tmp/gentoo/usr/lib/libaio.a \
+    toolchain/usr/lib/libaio.a
 
 # Additional libs usually don't provide stable abi.
 # Let's also force static link
@@ -249,14 +267,14 @@ if [ "${ARCH}" = "x86_64" ]; then
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
+GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a ./libpthread.so AS_NEEDED ( ../../lib/ld-linux-x86-64.so.2 ) )
 " >toolchain/usr/lib/libc.so
 elif [ "${ARCH}" = "aarch64" ]; then
     echo "/* GNU ld script
    Use the shared library, but some functions are only in
    the static library, so try that secondarily.  */
 OUTPUT_FORMAT(elf64-${output_format})
-GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a AS_NEEDED ( ../../lib/ld-linux-aarch64.so.1 ) )
+GROUP ( ./libglibc-compatibility.a ../../lib/libc.so.6 ./libc_nonshared.a ./libpthread.so AS_NEEDED ( ../../lib/ld-linux-aarch64.so.1 ) )
 " >toolchain/usr/lib/libc.so
 else
     echo "Unknown architecture: ${ARCH}"
@@ -353,34 +371,26 @@ cp -r -L /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtbegin.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgcc_eh.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgcc.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgfortran.a \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgfortran.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++fs.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++exp.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libstdc++.modules.json \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libsupc++.a \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libatomic.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libatomic.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgcov.a \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libhwasan.a \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libhwasan.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libsanitizer.spec \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libasan_preinit.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libasan.a \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libasan.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libtsan_preinit.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libtsan.a \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libtsan.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libubsan.a \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libubsan.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/liblsan_preinit.o \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/liblsan.a \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/liblsan.so \
     toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}
 
 if [ "${ARCH}" = "x86_64" ]; then
     cp -r -L /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libquadmath.a \
-        /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libquadmath.so \
         toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}
 fi
 
@@ -389,10 +399,16 @@ cp -r -L /tmp/gentoo/usr/libexec/gcc/${TRIPLE}/${GCC_VERSION}/liblto_plugin.so t
 # gomp
 cp -r -L \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/crtfastmath.o \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp.a \
-    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp.so \
     /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp.spec \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp.so \
     toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}
+
+cp -r -L \
+    /tmp/gentoo/usr/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp.a \
+    toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp-bin.a
+
+# newer gcc doesn't work well with old glibc, missing dl when compiling with -fopenmp
+echo "GROUP ( ./libgomp-bin.a -ldl )" >toolchain/lib/gcc/${TRIPLE}/${GCC_VERSION}/libgomp.a
 
 if [ "${ARCH}" = "x86_64" ]; then
     cp -r -L \

@@ -62,7 +62,7 @@
   * Very large size of memcpy typically indicates suboptimal (not cache friendly) algorithms in code or unrealistic scenarios,
   * so we don't pay attention to using non-temporary stores.
   *
-  * On recent Intel CPUs, the presence of "erms" makes "rep movsb" the most benefitial,
+  * On recent Intel CPUs, the presence of "erms" makes "rep movsb" the most beneficial,
   * even comparing to non-temporary aligned unrolled stores even with the most wide registers.
   *
   * memcpy can be written in asm, C or C++. The latter can also use inline asm.
@@ -92,7 +92,7 @@
   * See https://habr.com/en/company/yandex/blog/457612/
   */
 
-
+__attribute__((no_sanitize("coverage")))
 static inline void * inline_memcpy(void * __restrict dst_, const void * __restrict src_, size_t size)
 {
     /// We will use pointer arithmetic, so char pointer will be used.
@@ -180,7 +180,14 @@ tail:
             /// Aligned unrolled copy. We will use half of available SSE registers.
             /// It's not possible to have both src and dst aligned.
             /// So, we will use aligned stores and unaligned loads.
-            __m128i c0, c1, c2, c3, c4, c5, c6, c7;
+            __m128i c0;
+            __m128i c1;
+            __m128i c2;
+            __m128i c3;
+            __m128i c4;
+            __m128i c5;
+            __m128i c6;
+            __m128i c7;
 
             while (size >= 128)
             {
