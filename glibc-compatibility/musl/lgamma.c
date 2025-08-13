@@ -78,9 +78,6 @@
  *
  */
 
-// Disable warnings by PVS-Studio
-//-V::GA
-
 static const double
 pi  =  3.14159265358979311600e+00, /* 0x400921FB, 0x54442D18 */
 a0  =  7.72156649015328655494e-02, /* 0x3FB3C467, 0xE37DB0C8 */
@@ -148,8 +145,6 @@ w6  = -1.63092934096575273989e-03; /* 0xBF5AB89D, 0x0B9E43E4 */
 
 #include <stdint.h>
 #include <math.h>
-
-#include "libm.h"
 
 double lgamma_r(double x, int *signgamp)
 {
@@ -262,9 +257,4 @@ double lgamma_r(double x, int *signgamp)
 	if (sign)
 		r = nadj - r;
 	return r;
-}
-
-double lgamma(double x)
-{
-	return lgamma_r(x, &__signgam);
 }

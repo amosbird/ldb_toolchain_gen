@@ -149,15 +149,29 @@ RUN bash -c "echo 'MYCMAKEARGS=\"\${MYCMAKEARGS} -DLIBOMP_ENABLE_SHARED=OFF\"' >
 
 RUN bash -c 'echo llvm-runtimes/openmp openmp-static.conf > /tmp/gentoo/etc/portage/package.env'
 
+RUN bash -c 'echo "dev-libs/libaio static-libs" >> /tmp/gentoo/etc/portage/package.use'
+
 ENV GCC_VERSION=15 LLVM_VERSION=20
 
 RUN if [ "${ARCH}" = "aarch64" ]; then mkdir -p /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib; ln -s /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib64; echo 'FEATURES="-qa ${FEATURES}"' >> /tmp/gentoo/etc/portage/make.conf/0100_bootstrap_prefix_make.conf; fi
 
-RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb llvm-runtimes/openmp
+RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb llvm-runtimes/openmp dev-libs/libaio
 
 RUN bash execute-prefix.sh emerge --sync
  
 RUN bash execute-prefix.sh emerge --update --deep --changed-use @world
+
+RUN wget https://github.com/OpenMathLib/OpenBLAS/archive/refs/tags/v0.3.30.tar.gz -O /opt/OpenBLAS-0.3.30.tar.gz && \
+    cd /opt && \
+    tar zxf OpenBLAS-0.3.30.tar.gz && \
+    cd OpenBLAS-0.3.30 && \
+    export USE_THREAD=0 USE_LOCKING=1 DYNAMIC_ARCH=1 NO_AFFINITY=1 TARGET=GENERIC BUILD_BFLOAT16=1 NO_SHARED=1 && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf OpenBLAS-0.3.30 OpenBLAS-0.3.30.tar.gz
+
+COPY OpenBLASConfig.cmake OpenBLASConfigVersion.cmake /
 
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-$(/tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/bin/clang --version  | head -n 1 | awk '{print $3}')/libcxx/utils/gdb/libcxx/printers.py -O /opt/printers.py
 
