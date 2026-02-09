@@ -151,15 +151,18 @@ RUN bash -c 'echo llvm-runtimes/openmp openmp-static.conf > /tmp/gentoo/etc/port
 
 RUN bash -c 'echo "dev-libs/libaio static-libs" >> /tmp/gentoo/etc/portage/package.use'
 
-ENV GCC_VERSION=15 LLVM_VERSION=20
+ENV GCC_VERSION=15 LLVM_VERSION=21
 
 RUN if [ "${ARCH}" = "aarch64" ]; then mkdir -p /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib; ln -s /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib /tmp/gentoo/usr/lib/llvm/${LLVM_VERSION}/lib64; echo 'FEATURES="-qa ${FEATURES}"' >> /tmp/gentoo/etc/portage/make.conf/0100_bootstrap_prefix_make.conf; fi
 
-RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb llvm-runtimes/openmp dev-libs/libaio
-
 RUN bash execute-prefix.sh emerge --sync
- 
+
+# TODO: remove this hack
+RUN bash execute-prefix.sh emerge re2c
+
 RUN bash execute-prefix.sh emerge --update --deep --changed-use @world
+
+RUN bash execute-prefix.sh emerge nasm libcxx lldb sys-libs/libunwind llvm-core/clang lld gdb llvm-runtimes/openmp dev-libs/libaio
 
 RUN wget https://github.com/OpenMathLib/OpenBLAS/archive/refs/tags/v0.3.30.tar.gz -O /opt/OpenBLAS-0.3.30.tar.gz && \
     cd /opt && \

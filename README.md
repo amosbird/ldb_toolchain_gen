@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-LDB toolchain generator gives you a working gcc-15 and clang-20 environment with cmake 3.29. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
+LDB toolchain generator gives you a working gcc-15 and clang-21 environment with cmake 3.29. It helps compiling modern C++ projects like ClickHouse and Doris on almost any Linux distros. The installation file can be found in [Releases](https://github.com/amosbird/ldb_toolchain_gen/releases).
 
 ByConity is supported as well, but it requires manual adjustments due to its outdated toolchain support. If you just need to make `clangd` happy (e.g., for code completion and navigation), run the following:
 
